@@ -1,4 +1,4 @@
-#include "neighbors.h"
+#include "nodes.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -10,15 +10,6 @@ int pos_mod(int& a, int& b){ return ( (a%b + b)%b ); }
 
 //----------------------------------------------------------------------------//
 
-void attempt_to_add(std::vector<int>& vint, int& i, int& j, int& k)
-{
-    int site = ising::find_site_index(i, j, k);
-    if(site >= 0)
-	vint.push_back(site);
-}
-
-//----------------------------------------------------------------------------//
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -27,13 +18,34 @@ namespace ising {
    
 //----------------------------------------------------------------------------//
 
-int find_site_index(int& ix, int& iy, int& iz)
+void nodes::init(int my_nx, int my_ny, int my_nz)
+{
+    nx = my_nx;
+    ny = my_ny;
+    nz = my_nz;
+
+    nsites = nx*ny*nz;
+
+    if(nx < 1 || ny < 1 || nz < 1){
+	std::cerr << "The number of nodes in each dimension must be at least 1"
+	          << " you did: nx = " << nx << ", "
+	          << " ny = " << ny << ", "
+		  << " nz = " << nz << std::endl;
+	exit(1);
+    }
+
+    determine_connectivity();
+}
+
+//----------------------------------------------------------------------------//
+
+int nodes::find_site_index(int ix, int iy, int iz)
 {
 #ifdef PBC_Z
-    return pos_mod(iz%nz)*ny*nx + pos_mod(iy%ny)*nx + pos_mod(ix%nx);
+    return pos_mod(iz, nz)*ny*nx + pos_mod(iy, ny)*nx + pos_mod(ix, nx);
 #else
     if(iz >= 0 && iz < nz) // within the system (that is not replicated in z)
-	return iz*ny*nx + pos_mod(iy%ny)*nx + pos_mod(ix%nx);
+	return iz*ny*nx + pos_mod(iy, ny)*nx + pos_mod(ix, nx);
     else
 	return -1;
 #endif
@@ -41,12 +53,21 @@ int find_site_index(int& ix, int& iy, int& iz)
 
 //----------------------------------------------------------------------------//
 
+void nodes::attempt_to_add(std::vector<int>& vint, int i, int j, int k)
+{
+    int site = ising::nodes::find_site_index(i, j, k);
+    if(site >= 0)
+	vint.push_back(site);
+}
+
+//----------------------------------------------------------------------------//
+
 void nodes::determine_connectivity()
 {
 
-    for(size_t ix = 0; ix < nx; ++ix){
-	for(size_t iy = 0; iy < ny; ++iy){
-	    for(size_t iz = 0; iz < nz; ++iz){
+    for(int ix = 0; ix < nx; ++ix){
+	for(int iy = 0; iy < ny; ++iy){
+	    for(int iz = 0; iz < nz; ++iz){
 
 		std::vector<int> connections;
 
