@@ -18,7 +18,6 @@ for T in list_T:
     nsteps = 0
     while n_flipped_spins < n_spins_to_flip:
         k = random.randint(0, N - 1)
-        print k
         Pocket, Cluster = [k], [k]
         while Pocket != []:
             j = random.choice(Pocket)
