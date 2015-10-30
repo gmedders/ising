@@ -1,6 +1,10 @@
+// Taken from https://gist.github.com/cbsmith/5538174
+//
 // -*- compile-command: "clang++ -ggdb -o random_selection -std=c++0x -stdlib=libc++ random_selection.cpp" -*-
 //Reference implementation for doing random number selection from a container.
 //Kept for posterity and because I made a surprising number of subtle mistakes on my first attempt.
+#ifndef RANDOM_SELECTOR
+#define RANDOM_SELECTOR
 #include <random>
 #include <iterator>
 
@@ -33,7 +37,7 @@ struct random_selector
 private:
 	RandomGenerator gen;
 };
-
+#if 0
 //example use case with uniformity test
 #include <iostream>
 #include <vector>
@@ -69,3 +73,5 @@ int main(int argc, const char* argv[]) {
 	run_testcase(source_container);
 	return 0;
 }
+#endif
+#endif // RANDOM_SELECTOR
