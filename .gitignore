@@ -1,5 +1,4 @@
 *.swp
 *.o
 clusterMC_ising_thermo_prop
-test-random-selector
-test-random-selector2
+test-random-shuffle

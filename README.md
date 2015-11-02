@@ -9,4 +9,3 @@ Ising model
 Acknowledgments
 ===============
  - The cluster Monte Carlo algorithm was nicely explained in Lecture 8 of the course [Statistical Mechanics: Algorithms and Computations](https://www.coursera.org/course/smac) on Coursera. In particular, a reference implementation of the cluster Monte Carlo algorithm was provided in that course for python. Parts of it formed the basis for this c++ implementation. 
- - The `random_selector` struct that enables an object to be selected at random from a c++ container comes from a [gist](https://gist.github.com/5538174.git), which was provided as part of the response to [this question](http://stackoverflow.com/a/16421677).
