@@ -138,15 +138,46 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
 
 int main(int argc, char** argv)
 {
-    if (argc < 1) {
-        std::cerr << "usage: clusterMC_ising_thermo_prop > a.dat" << std::endl;
+    if (argc != 4) {
+        std::cerr << "usage: clusterMC_ising_thermo_prop nx ny nz > a.dat" << std::endl;
         return EXIT_FAILURE;
     }
 
     // Define lattice size and initialize it
-    const int nx = 50;
-    const int ny = 50;
-    const int nz = 1;
+    int nx;
+    {
+        std::istringstream iss(argv[1]);
+        iss >> nx;
+        if (!iss || !iss.eof()) {
+            std::cerr << "could not convert '" << argv[1]
+                << "' to int" << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
+    int ny;
+    {
+        std::istringstream iss(argv[2]);
+        iss >> ny;
+        if (!iss || !iss.eof()) {
+            std::cerr << "could not convert '" << argv[2]
+                << "' to int" << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
+    int nz;
+    {
+        std::istringstream iss(argv[3]);
+        iss >> nz;
+        if (!iss || !iss.eof()) {
+            std::cerr << "could not convert '" << argv[3]
+                << "' to int" << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
+
+    std::cerr << "Initializing a " << nx << " x " << ny << " x "
+              << nz << " grid." << std::endl;
+
 
     ising::nodes lattice;
     lattice.init(nx, ny, nz);
@@ -169,7 +200,7 @@ int main(int argc, char** argv)
     // Define the initial temperature and increments
     double T0 = 1.00;
     double dT = 0.2;
-    const size_t nT = 16;
+    const size_t nT = 32;
 
     int spin[lattice.nsites];
     std::copy(initial_spin, initial_spin + lattice.nsites, spin);
