@@ -69,30 +69,58 @@ void nodes::determine_connectivity()
         for(int iy = 0; iy < ny; ++iy){
             for(int ix = 0; ix < nx; ++ix){
 
-		std::vector<int> connections;
+                // First find the nearest neighbors
+                {
+		    std::vector<int> connections;
 
-		// +/- x
-		attempt_to_add(connections, ix + 1, iy, iz);
-		attempt_to_add(connections, ix - 1, iy, iz);
-		//connections.push_back( find_site_index( ix + 1, iy, iz) );
-		//connections.push_back( find_site_index( ix - 1, iy, iz) );
+		    // +/- x
+		    attempt_to_add(connections, ix + 1, iy, iz);
+		    attempt_to_add(connections, ix - 1, iy, iz);
 
-		// +/- y
-		attempt_to_add(connections, ix, iy + 1, iz);
-		attempt_to_add(connections, ix, iy - 1, iz);
-		//connections.push_back( find_site_index( ix, iy + 1, iz) );
-		//connections.push_back( find_site_index( ix, iy - 1, iz) );
+		    // +/- y
+		    attempt_to_add(connections, ix, iy + 1, iz);
+		    attempt_to_add(connections, ix, iy - 1, iz);
 
-		// +/- z
-		// For 2D lattice, don't add +/- z
-		if (nz > 1){
-		    attempt_to_add(connections, ix, iy, iz + 1);
-		    attempt_to_add(connections, ix, iy, iz - 1);
-		    //connections.push_back( find_site_index( ix, iy, iz + 1) );
-		    //connections.push_back( find_site_index( ix, iy, iz - 1) );
-		}
+		    // +/- z
+		    // For 2D lattice, don't add +/- z
+		    if (nz > 1){
+		        attempt_to_add(connections, ix, iy, iz + 1);
+		        attempt_to_add(connections, ix, iy, iz - 1);
+		    }
 
-		neighbors.push_back(connections);
+		    neighbors.push_back(connections);
+                }
+
+                // Also construct list including NN and diagonal neighbors
+                {
+		    std::vector<int> connections;
+
+		    // +/- x
+                    for(int dx = -1; dx < 2; ++dx){
+                    for(int dy = -1; dy < 2; ++dy){
+                        // For 2D lattice, don't add +/- z
+                        if(nz > 1){
+                            for(int dz = -1; dz < 2; ++dz){
+                                if(!(dx == 0 && dy == 0 && dz == 0)){
+                                    attempt_to_add(connections, ix + dx,
+                                                                iy + dy,
+                                                                iz + dz);
+                                }
+                            }
+                        }else{
+                            int dz = 0;
+                            if(!(dx == 0 && dy == 0 && dz == 0)){
+                                attempt_to_add(connections, ix + dx,
+                                                            iy + dy,
+                                                            iz + dz);
+                            }
+                        }
+
+		    }
+                    }
+
+		    diagNeighbors.push_back(connections);
+                }
 
 	    }
 	}
