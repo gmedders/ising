@@ -36,7 +36,7 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
     // flipped. Required number of spins grows with number of lattice sites
     int n_spins_to_flip(lattice.nsites * nsample);
 
-    for(size_t n = 0; n < n_spins_to_flip; ++n){
+    for(int n = 0; n < n_spins_to_flip; ++n){
 
 	int active_site = rand_lattice_site(generator);
 
@@ -58,7 +58,7 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
         }
 
 	int M(0);
-	for(size_t i = 0; i < lattice.nsites; ++i)
+	for(int i = 0; i < lattice.nsites; ++i)
 	    M += spin[i];
 
 	M_av += ((double)std::abs(M));
@@ -144,14 +144,14 @@ int main(int argc, char** argv)
 
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0,1);
-    for(size_t i = 0; i < lattice.nsites; ++i){
+    for(int i = 0; i < lattice.nsites; ++i){
 	if(distribution(generator) == 0)
 	    initial_spin[i] = -1;
 	else
 	    initial_spin[i] = 1;
     }
     int mi = 0;
-    for(size_t i = 0; i < lattice.nsites; ++i)
+    for(int i = 0; i < lattice.nsites; ++i)
 	mi += initial_spin[i];
 
     // Define the initial temperature and increments

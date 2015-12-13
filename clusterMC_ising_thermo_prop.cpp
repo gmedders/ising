@@ -8,6 +8,7 @@
 #include <sstream>
 #include <cstring>
 
+#include <algorithm>
 #include <random>
 
 #include "nodes.h"
@@ -36,7 +37,7 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
 
     // Initial magnetization
     int M(0);
-    for(size_t i = 0; i < lattice.nsites; ++i)
+    for(int i = 0; i < lattice.nsites; ++i)
 	M += spin[i];
 
     // Set up random numbers
@@ -97,8 +98,8 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
 
 #if 0
 	std::cout << " <<<<<<< step: " << nsteps << " >>>>>>>" << std::endl;
-	for(size_t i = 0; i < lattice.nx; ++i){
-	    for(size_t j = 0; j < lattice.ny; ++j){
+	for(int i = 0; i < lattice.nx; ++i){
+	    for(int j = 0; j < lattice.ny; ++j){
 		if(spin[i*lattice.ny + j] < 0)
 		    std::cout << std::setw(2) << '-';
 		else
@@ -112,7 +113,7 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
 
 	// Initial magnetization
 	int M(0);
-	for(size_t i = 0; i < lattice.nsites; ++i)
+	for(int i = 0; i < lattice.nsites; ++i)
 	    M += spin[i];
 
 	M_av += std::abs(M);
@@ -187,14 +188,14 @@ int main(int argc, char** argv)
 
     std::default_random_engine generator;
     std::uniform_int_distribution<int> distribution(0,1);
-    for(size_t i = 0; i < lattice.nsites; ++i){
+    for(int i = 0; i < lattice.nsites; ++i){
 	if(distribution(generator) == 0)
 	    initial_spin[i] = -1;
 	else
 	    initial_spin[i] = 1;
     }
     int mi = 0;
-    for(size_t i = 0; i < lattice.nsites; ++i)
+    for(int i = 0; i < lattice.nsites; ++i)
 	mi += initial_spin[i];
 
     // Define the initial temperature and increments
