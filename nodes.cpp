@@ -65,9 +65,9 @@ void nodes::attempt_to_add(std::vector<int>& vint, int i, int j, int k)
 void nodes::determine_connectivity()
 {
 
-    for(int ix = 0; ix < nx; ++ix){
-	for(int iy = 0; iy < ny; ++iy){
-	    for(int iz = 0; iz < nz; ++iz){
+    for(int iz = 0; iz < nz; ++iz){
+        for(int iy = 0; iy < ny; ++iy){
+            for(int ix = 0; ix < nx; ++ix){
 
 		std::vector<int> connections;
 
