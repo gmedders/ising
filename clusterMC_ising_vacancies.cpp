@@ -8,6 +8,7 @@
 #include <sstream>
 #include <cstring>
 
+#include <algorithm>
 #include <random>
 
 #include "nodes.h"
