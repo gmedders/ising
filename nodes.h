@@ -13,7 +13,8 @@ struct nodes {
     void init(int, int, int);
     void determine_connectivity();
     int find_site_index(int, int, int);
-    void attempt_to_add(std::vector<int>&, int, int, int);
+    void attempt_to_add(std::vector<int>&, std::vector<bool>&,
+                        int, int, int, bool);
 
     int nx;
     int ny;
@@ -21,11 +22,12 @@ struct nodes {
     int nsites;
 
     std::vector< std::vector<int> > neighbors;
-    std::vector< std::vector<int> > diagNeighbors;
+    std::vector< std::vector<bool> > neighborVertical;
+//    std::vector< std::vector<int> > diagNeighbors;
 };
 
 inline nodes::nodes()
-: nx(0), ny(0), nz(0), nsites(0), neighbors(0), diagNeighbors(0)
+: nx(0), ny(0), nz(0), nsites(0), neighbors(0), neighborVertical(0)
 {
 }
 

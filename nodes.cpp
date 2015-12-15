@@ -1,6 +1,6 @@
 #include "nodes.h"
 
-#define PBC true
+//#define PBC true
 //#define NO_PBC true
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,11 +73,14 @@ int nodes::find_site_index(int ix, int iy, int iz)
 
 //----------------------------------------------------------------------------//
 
-void nodes::attempt_to_add(std::vector<int>& vint, int i, int j, int k)
+void nodes::attempt_to_add(std::vector<int>& vint, std::vector<bool>& vbool,
+                           int i, int j, int k, bool vert)
 {
     int site = ising::nodes::find_site_index(i, j, k);
-    if(site >= 0)
+    if(site >= 0){
 	vint.push_back(site);
+        vbool.push_back(vert);
+    }
 }
 
 //----------------------------------------------------------------------------//
@@ -89,28 +92,31 @@ void nodes::determine_connectivity()
         for(int iy = 0; iy < ny; ++iy){
             for(int ix = 0; ix < nx; ++ix){
 
-                // First find the nearest neighbors
-                {
-		    std::vector<int> connections;
+              // First find the nearest neighbors
+              {
+	        std::vector<int> connections;
+	        std::vector<bool> vertical;
 
-		    // +/- x
-		    attempt_to_add(connections, ix + 1, iy, iz);
-		    attempt_to_add(connections, ix - 1, iy, iz);
+	        // +/- x
+	        attempt_to_add(connections, vertical, ix + 1, iy, iz, false);
+	        attempt_to_add(connections, vertical, ix - 1, iy, iz, false);
 
-		    // +/- y
-		    attempt_to_add(connections, ix, iy + 1, iz);
-		    attempt_to_add(connections, ix, iy - 1, iz);
+	        // +/- y
+	        attempt_to_add(connections, vertical, ix, iy + 1, iz, false);
+	        attempt_to_add(connections, vertical, ix, iy - 1, iz, false);
 
-		    // +/- z
-		    // For 2D lattice, don't add +/- z
-		    if (nz > 1){
-		        attempt_to_add(connections, ix, iy, iz + 1);
-		        attempt_to_add(connections, ix, iy, iz - 1);
-		    }
+	        // +/- z
+	        // For 2D lattice, don't add +/- z
+	        if (nz > 1){
+	            attempt_to_add(connections, vertical, ix, iy, iz + 1, true);
+	            attempt_to_add(connections, vertical, ix, iy, iz - 1, true);
+	        }
 
-		    neighbors.push_back(connections);
-                }
+	        neighbors.push_back(connections);
+                neighborVertical.push_back(vertical);
+              }
 
+#if 0
                 // Also construct list including NN and diagonal neighbors
                 {
 		    std::vector<int> connections;
@@ -141,6 +147,7 @@ void nodes::determine_connectivity()
 
 		    diagNeighbors.push_back(connections);
                 }
+#endif
 
 	    }
 	}
