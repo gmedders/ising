@@ -1,3 +1,7 @@
+#ifdef ENABLE_MPI
+#include <mpi.h>
+#endif
+
 #include <cmath>
 #include <cassert>
 #include <cstdlib>
@@ -22,9 +26,24 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-size_t nmove(10000);
-//size_t nmove(1000000);
+size_t nmove(10);
+//size_t nmove(10000);
 int ndesiredOccupied;
+
+//----------------------------------------------------------------------------//
+
+int read_command_line_arg(char* argv)
+{
+    int val;
+    std::istringstream iss(argv);
+    iss >> val; 
+    if (!iss || !iss.eof()) {
+        std::cerr << "could not convert '" << argv
+            << "' to int" << std::endl;
+        return EXIT_FAILURE;
+    }
+    return val;
+}
 
 //----------------------------------------------------------------------------//
 
@@ -79,12 +98,11 @@ int calcE_for_two_connected_sites(ising::nodes& lattice, int* spin,
 
 //----------------------------------------------------------------------------//
 
-void do_ising(ising::nodes& lattice, int* spin, const double T,
-	      std::default_random_engine& generator)
+int do_ising(ising::nodes& lattice, int* spin, const double T,
+             std::default_random_engine& generator,
+             double& M_av, double& numNeighbor_av, double& numVertNeighbor_av)
 {
-    double M_av(0);
-    double numNeighbor_av(0);
-    double numVertNeighbor_av(0);
+    int n_av(0);
 
     // Cluster expansion probability for a 2D ising model with all sites filled
     double beta = 1.0/T;
@@ -120,11 +138,12 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
         exit(1);
     }
 
-    size_t n_av(0);
+#if 0
     {
         std::string comment("Initial configuration");
         print_cell(lattice, spin, comment);
     }
+#endif
 
     // Required number of attempted moves to grow with number of lattice sites
     for(size_t imove = 0; imove < nmove*lattice.nsites; ++imove){
@@ -143,7 +162,7 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
                      lattice.diagNeighbors[orig_site][rand_neighbor(generator)];
 #endif
 
-        bool accepted(false);
+        bool rejected(true);
         // Ensure that the move is not trivial
         if(spin[orig_site] != spin[dest_site]){
 
@@ -162,15 +181,9 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
             double p = std::min(1.0, std::exp(-beta*dE));
             double r = rand_01(generator);
             // Test if the move was REJECTED. If so, re-swap spins to undo move
-            //if( rand_01(generator) > p){
             if( r > p){
-//                std::cerr << "Rejected!" << std::endl;
                 swap_spins(spin, orig_site, dest_site);
-            }else{
-                accepted = true;
-//                std::cerr << "dE = " << E1 << " - " << E0 << " ||| MC:"
-//                          << r << " < " << p << ". ";
-//                std::cerr << "Accepted!" << std::endl;
+                rejected = false;
             }
         }
 
@@ -203,7 +216,7 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
         // Incremented n_av above in calculation of magnetization;
 
 #if 0
-        if(imove % 1 == 0 && accepted == true){
+        if(imove % 1 == 0 && rejected == false){
             int orig_ix = 1 + (orig_site/lattice.nz/lattice.ny)%lattice.nx;
             int orig_iy = 1 + (orig_site/lattice.nz)%lattice.ny;
             int dest_ix = 1 + (dest_site/lattice.nz/lattice.ny)%lattice.nx;
@@ -284,16 +297,18 @@ void do_ising(ising::nodes& lattice, int* spin, const double T,
 
     }
 
-    std::cout << std::setw(12) << T
-	      << std::setw(12) << ((double)M_av)/((double)n_av)
-						/((double)noccupied)
-	      << std::setw(12) << ((double)numNeighbor_av)/((double)n_av)
-						         /((double)noccupied)
-	      << std::setw(12) << ((double)numNeighbor_av - numVertNeighbor_av)
-                                                       /((double)numNeighbor_av)
-	      << std::setw(12) << ((double)numVertNeighbor_av)
-                                                       /((double)numNeighbor_av)
-	      << std::setw(12) << n_av << std::endl;
+    return n_av;
+
+//    std::cout << std::setw(12) << T
+//	      << std::setw(12) << ((double)M_av)/((double)n_av)
+//						/((double)noccupied)
+//	      << std::setw(12) << ((double)numNeighbor_av)/((double)n_av)
+//						         /((double)noccupied)
+//	      << std::setw(12) << ((double)numNeighbor_av - numVertNeighbor_av)
+//                                                       /((double)numNeighbor_av)
+//	      << std::setw(12) << ((double)numVertNeighbor_av)
+//                                                       /((double)numNeighbor_av)
+//	      << std::setw(12) << n_av << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,37 +331,23 @@ int main(int argc, char** argv)
     }
 
     // Define lattice size and initialize it
-    int nx;
-    {
-        std::istringstream iss(argv[1]);
-        iss >> nx; 
-        if (!iss || !iss.eof()) {
-            std::cerr << "could not convert '" << argv[1]
-                << "' to int" << std::endl;
-            return EXIT_FAILURE;
-        }
-    }
-    int ny;
-    {
-        std::istringstream iss(argv[2]);
-        iss >> ny; 
-        if (!iss || !iss.eof()) {
-            std::cerr << "could not convert '" << argv[2]
-                << "' to int" << std::endl;
-            return EXIT_FAILURE;
-        }
-    }
-    int nz;
-    {
-        std::istringstream iss(argv[3]);
-        iss >> nz; 
-        if (!iss || !iss.eof()) {
-            std::cerr << "could not convert '" << argv[3]
-                << "' to int" << std::endl;
-            return EXIT_FAILURE;
-        }
-    }
+    int nx = read_command_line_arg(argv[1]);
+    int ny = read_command_line_arg(argv[2]);
+    int nz = read_command_line_arg(argv[3]);
 
+    int my_rank(0), my_size(1);
+#ifdef ENABLE_MPI    
+    MPI_Init(&argc, &argv);
+
+    MPI_Comm_size(MPI_COMM_WORLD, &my_size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    //num_angular_samples /= my_size;
+#endif
+
+#ifdef ENABLE_MPI
+    if(my_rank == 0)
+#endif
     // Now have all information needed to set up the lattice sites
     std::cout << "# clusterMC_ising_vacancies.cpp\n"
               << "# Initializing a " << nx << " x " << ny << " x "
@@ -355,16 +356,14 @@ int main(int argc, char** argv)
     ising::nodes lattice;
     lattice.init(nx, ny, nz);
 
+#ifdef ENABLE_MPI
+    if(my_rank == 0)
+#endif
+    lattice.report();
+
     // Determine how many sites are to be occupied
     {
-        std::istringstream iss(argv[4]);
-        int tmp;
-        iss >> tmp; 
-        if (!iss || !iss.eof()) {
-            std::cerr << "could not convert '" << argv[4]
-                << "' to int" << std::endl;
-            return EXIT_FAILURE;
-        }
+        int tmp = read_command_line_arg(argv[4]);
         // If passed a negative number, make a fully occupied lattice
         if(tmp < 0){
             ndesiredOccupied = lattice.nsites;
@@ -382,6 +381,9 @@ int main(int argc, char** argv)
                       << std::endl;
             return EXIT_FAILURE;
         }
+#ifdef ENABLE_MPI
+    if(my_rank == 0)
+#endif
         std::cout << "# Requesting " << ndesiredOccupied << " sites to be"
                   << " occupied out of " << lattice.nsites << " total sites"
                   << std::endl;
@@ -390,33 +392,24 @@ int main(int argc, char** argv)
     // Set up the initial spins
     int initial_spin[lattice.nsites];
 
-    std::default_random_engine generator(19103);
-    std::uniform_int_distribution<int> distribution(0,1);
-#if 0
-    for(int i = 0; i < lattice.nsites; ++i){
-        if(i < lattice.nsites/2){
-            initial_spin[i] = -1;
-        }else{
-            initial_spin[i] = 0;
-        }
-    }
+#ifdef ENABLE_MPI
+    std::default_random_engine generator(19103 + 11*my_rank);
 #else
-    for(int i = 0; i < lattice.nsites; ++i){
+    std::default_random_engine generator(19103);
+#endif
+
+    std::uniform_int_distribution<int> distribution(0,1);
+    for(int i = 0; i < lattice.nsites; ++i)
 	if(distribution(generator) == 0)
 	    initial_spin[i] = -1;
 	else
 	    initial_spin[i] = 1;
-    }
-#endif
-    int mi = 0;
-    for(int i = 0; i < lattice.nsites; ++i)
-	mi += initial_spin[i];
 
     // Define the initial temperature and increments
     double T0 = 1.0e-16;
     double dT = 0.2;
-    //const size_t nT = 1;
-    const size_t nT = 32;
+    const size_t nT = 1;
+    //const size_t nT = 32;
 
     for(size_t i = 0; i < nT; ++i){
 	double T = T0 + dT*i;
@@ -424,6 +417,62 @@ int main(int argc, char** argv)
         int spin[lattice.nsites];
         std::copy(initial_spin, initial_spin + lattice.nsites, spin);
 
-	do_ising(lattice, spin, T, generator);
+        double my_M_av(0);
+        double my_numNeighbor_av(0);
+        double my_numVertNeighbor_av(0);
+
+	int my_n_av = do_ising(lattice, spin, T, generator, my_M_av,
+                               my_numNeighbor_av, my_numVertNeighbor_av);
+
+        // This is checked in do_ising()
+        const int noccupied = ndesiredOccupied;
+
+#ifdef ENABLE_MPI
+        double M_av;
+        double numNeighbor_av;
+        double numVertNeighbor_av;
+        int n_av;
+
+        std::cout << "On rank " << my_rank << ": " << my_M_av << " " << my_n_av
+                  << std::endl;
+
+        MPI_Reduce(&my_M_av, &M_av, 1,
+                   MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&my_numNeighbor_av, &numNeighbor_av, 1,
+                   MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&my_numVertNeighbor_av, &numVertNeighbor_av, 1,
+                   MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&my_n_av, &n_av, 1,
+                   MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+        if(my_rank == 0)
+            std::cout << "Total: " << M_av << " " << n_av
+                << std::endl;
+
+
+        // Not all processes are expected to have made the same number of
+        // observations. Therefore, can't divide by my_size. Instead, divide
+        // total quantity by total number of observations when printing
+
+        if(my_rank == 0)
+#else
+        double M_av = my_M_av;
+        double numNeighbor_av = my_numNeighbor_av;
+        double numVertNeighbor_av = my_numVertNeighbor_av;
+        int n_av = my_n_av;
+#endif
+        std::cout << std::setw(12) << T
+    	          << std::setw(12) << ((double)M_av)/((double)n_av)
+    	            				/((double)noccupied)
+    	          << std::setw(12) << ((double)numNeighbor_av)/((double)n_av)
+    	                                                    /((double)noccupied)
+    	          << std::setw(12) <<((double)numNeighbor_av-numVertNeighbor_av)
+                                                       /((double)numNeighbor_av)
+    	          << std::setw(12) << ((double)numVertNeighbor_av)
+                                                       /((double)numNeighbor_av)
+    	          << std::setw(12) << n_av << std::endl;
     }
+#ifdef ENABLE_MPI
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Finalize();
+#endif
 }

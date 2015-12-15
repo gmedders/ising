@@ -37,6 +37,11 @@ void nodes::init(int my_nx, int my_ny, int my_nz)
 	exit(1);
     }
 
+    determine_connectivity();
+}
+
+void nodes::report()
+{
 #ifdef PBC
     std::cerr << "# Full PBC" << std::endl;
     std::cout << "# Full PBC" << std::endl;
@@ -47,8 +52,6 @@ void nodes::init(int my_nx, int my_ny, int my_nz)
     std::cerr << "# Slab geometry: PBC only in XY" << std::endl;
     std::cout << "# Slab geometry: PBC only in XY" << std::endl;
 #endif
-
-    determine_connectivity();
 }
 
 //----------------------------------------------------------------------------//

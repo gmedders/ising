@@ -11,6 +11,7 @@ struct nodes {
     inline nodes();
 
     void init(int, int, int);
+    void report();
     void determine_connectivity();
     int find_site_index(int, int, int);
     void attempt_to_add(std::vector<int>&, std::vector<bool>&,
