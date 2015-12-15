@@ -297,7 +297,8 @@ int main(int argc, char** argv)
         }
     }
 
-    std::cerr << "Initializing a " << nx << " x " << ny << " x "
+    std::cout << "# localMC_ising_vacancies.cpp\n"
+              << "# Initializing a " << nx << " x " << ny << " x "
                       << nz << " grid." << std::endl;
 
     ising::nodes lattice;

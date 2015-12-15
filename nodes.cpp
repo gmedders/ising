@@ -1,5 +1,8 @@
 #include "nodes.h"
 
+#define PBC true
+//#define NO_PBC true
+
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -34,6 +37,17 @@ void nodes::init(int my_nx, int my_ny, int my_nz)
 	exit(1);
     }
 
+#ifdef PBC
+    std::cerr << "# Full PBC" << std::endl;
+    std::cout << "# Full PBC" << std::endl;
+#elif defined(NO_PBC)
+    std::cerr << "# No PBC!!" << std::endl;
+    std::cout << "# No PBC!!" << std::endl;
+#else
+    std::cerr << "# Slab geometry: PBC only in XY" << std::endl;
+    std::cout << "# Slab geometry: PBC only in XY" << std::endl;
+#endif
+
     determine_connectivity();
 }
 
@@ -41,8 +55,14 @@ void nodes::init(int my_nx, int my_ny, int my_nz)
 
 int nodes::find_site_index(int ix, int iy, int iz)
 {
-#ifdef PBC_Z
+#ifdef PBC
     return pos_mod(iz, nz)*ny*nx + pos_mod(iy, ny)*nx + pos_mod(ix, nx);
+#elif defined(NO_PBC)
+    // within the system (that is not replicated in x,y,z)
+    if(ix >= 0 && ix < nx && iy >= 0 && iy < ny && iz >= 0 && iz < nz)
+	return iz*ny*nx + iy*nx + ix;
+    else
+	return -1;
 #else
     if(iz >= 0 && iz < nz) // within the system (that is not replicated in z)
 	return iz*ny*nx + pos_mod(iy, ny)*nx + pos_mod(ix, nx);

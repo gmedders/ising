@@ -25,4 +25,6 @@ test-random-shuffle: test-random-shuffle.o
 	$(CXX) -o test-random-shuffle test-random-shuffle.o
 
 clean:
-	rm -f clusterMC_ising_thermo_prop test-random-shuffle *.o
+	rm -f clusterMC_ising_thermo_prop clusterMC_ising_vacancies \
+              localMC_ising_thermo_prop localMC_ising_vacancies \
+              test-random-shuffle *.o

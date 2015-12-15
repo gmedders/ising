@@ -176,7 +176,8 @@ int main(int argc, char** argv)
         }
     }
 
-    std::cerr << "Initializing a " << nx << " x " << ny << " x "
+    std::cout << "# clusterMC_ising_thermo_prop.cpp\n"
+              << "# Initializing a " << nx << " x " << ny << " x "
               << nz << " grid." << std::endl;
 
 

@@ -133,7 +133,8 @@ int main(int argc, char** argv)
         }
     }
 
-    std::cerr << "Initializing a " << nx << " x " << ny << " x "
+    std::cout << "# localMC_ising_thermo_prop.cpp\n"
+              << "# Initializing a " << nx << " x " << ny << " x "
                       << nz << " grid." << std::endl;
 
     ising::nodes lattice;
@@ -157,7 +158,7 @@ int main(int argc, char** argv)
     // Define the initial temperature and increments
     double T0 = 1.00;
     double dT = 0.2;
-    const size_t nT = 16;
+    const size_t nT = 32;
 
     int spin[lattice.nsites];
     std::copy(initial_spin, initial_spin + lattice.nsites, spin);
