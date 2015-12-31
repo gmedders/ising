@@ -19,16 +19,19 @@
 
 #define ANYWHERE doit
 #define FIXED_NUMBER yes
+#define CONDENSED yes
 
+#define VERBOSE yes
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-size_t nmove(10);
-//size_t nmove(10000);
+//size_t nmove(10);
+size_t nmove(40000);
 int ndesiredOccupied;
+int my_rank(0), my_size(1);
 
 //----------------------------------------------------------------------------//
 
@@ -59,11 +62,13 @@ void swap_spins(int* spin, int& orig, int& dest)
 void print_cell(ising::nodes& lattice, const int* spin, std::string comment)
 {    
     std::cerr << comment << std::endl;
-    for(int i = 0; i < lattice.nx; ++i){
-        for(int j = 0; j < lattice.ny; ++j){
-            if(spin[i*lattice.ny + j] < 0)
+    int iz(0);
+    for(int ix = 0; ix < lattice.nx; ++ix){
+        for(int iy = 0; iy < lattice.ny; ++iy){
+            int site = lattice.find_site_index(ix, iy, iz);
+            if(spin[site] < 0)
                 std::cerr << std::setw(2) << '-';
-            else if(spin[i*lattice.ny + j] == 0)
+            else if(spin[site] == 0)
                 std::cerr << std::setw(2) << 'O';
             else
                 std::cerr << std::setw(2) << '+';
@@ -138,7 +143,10 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
         exit(1);
     }
 
-#if 0
+#ifdef VERBOSE
+#ifdef ENABLE_MPI
+    if(my_rank == 0)
+#endif
     {
         std::string comment("Initial configuration");
         print_cell(lattice, spin, comment);
@@ -335,14 +343,13 @@ int main(int argc, char** argv)
     int ny = read_command_line_arg(argv[2]);
     int nz = read_command_line_arg(argv[3]);
 
-    int my_rank(0), my_size(1);
 #ifdef ENABLE_MPI    
     MPI_Init(&argc, &argv);
 
     MPI_Comm_size(MPI_COMM_WORLD, &my_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
-    //num_angular_samples /= my_size;
+    nmove /= my_size;
 #endif
 
 #ifdef ENABLE_MPI
@@ -382,7 +389,7 @@ int main(int argc, char** argv)
             return EXIT_FAILURE;
         }
 #ifdef ENABLE_MPI
-    if(my_rank == 0)
+        if(my_rank == 0)
 #endif
         std::cout << "# Requesting " << ndesiredOccupied << " sites to be"
                   << " occupied out of " << lattice.nsites << " total sites"
@@ -391,6 +398,7 @@ int main(int argc, char** argv)
 
     // Set up the initial spins
     int initial_spin[lattice.nsites];
+    std::fill(initial_spin, initial_spin + lattice.nsites, 0);
 
 #ifdef ENABLE_MPI
     std::default_random_engine generator(19103 + 11*my_rank);
@@ -398,18 +406,32 @@ int main(int argc, char** argv)
     std::default_random_engine generator(19103);
 #endif
 
+#ifdef CONDENSED
+    int num_inited_sites(0);
+    for(int iz = 0; iz < lattice.nz; ++iz){
+        for(int iy = 0; iy < lattice.ny; ++iy){
+            for(int ix = 0; ix < lattice.nx; ++ix){
+
+                if(num_inited_sites < ndesiredOccupied){
+                    initial_spin[lattice.find_site_index(ix, iy, iz)] = 1;
+                    ++num_inited_sites;
+                }
+            }
+        }
+    }
+#else
     std::uniform_int_distribution<int> distribution(0,1);
     for(int i = 0; i < lattice.nsites; ++i)
 	if(distribution(generator) == 0)
 	    initial_spin[i] = -1;
 	else
 	    initial_spin[i] = 1;
+#endif
 
     // Define the initial temperature and increments
     double T0 = 1.0e-16;
     double dT = 0.2;
-    const size_t nT = 1;
-    //const size_t nT = 32;
+    const size_t nT = 32;
 
     for(size_t i = 0; i < nT; ++i){
 	double T = T0 + dT*i;
@@ -433,9 +455,6 @@ int main(int argc, char** argv)
         double numVertNeighbor_av;
         int n_av;
 
-        std::cout << "On rank " << my_rank << ": " << my_M_av << " " << my_n_av
-                  << std::endl;
-
         MPI_Reduce(&my_M_av, &M_av, 1,
                    MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(&my_numNeighbor_av, &numNeighbor_av, 1,
@@ -444,10 +463,6 @@ int main(int argc, char** argv)
                    MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(&my_n_av, &n_av, 1,
                    MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-        if(my_rank == 0)
-            std::cout << "Total: " << M_av << " " << n_av
-                << std::endl;
-
 
         // Not all processes are expected to have made the same number of
         // observations. Therefore, can't divide by my_size. Instead, divide
