@@ -5,3 +5,4 @@ clusterMC_ising_vacancies
 localMC_ising_thermo_prop
 localMC_ising_vacancies
 test-random-shuffle
+mpi_*

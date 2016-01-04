@@ -16,6 +16,7 @@
 #include <random>
 
 #include "nodes.h"
+#include "helpers.h"
 
 #define ANYWHERE doit
 #define FIXED_NUMBER yes
@@ -33,85 +34,6 @@ namespace {
 size_t nmove(40000);
 int ndesiredOccupied;
 int my_rank(0), my_size(1);
-
-//----------------------------------------------------------------------------//
-
-int read_command_line_arg(char* argv)
-{
-    int val;
-    std::istringstream iss(argv);
-    iss >> val; 
-    if (!iss || !iss.eof()) {
-        std::cerr << "could not convert '" << argv
-            << "' to int" << std::endl;
-        return EXIT_FAILURE;
-    }
-    return val;
-}
-
-//----------------------------------------------------------------------------//
-
-void swap_spins(int* spin, int& orig, int& dest)
-{
-    int tmp = spin[dest];
-    spin[dest] = spin[orig];
-    spin[orig] = tmp;
-}
-
-//----------------------------------------------------------------------------//
-
-void print_cell(ising::nodes& lattice, std::string comment)
-{    
-    std::cerr << comment << std::endl;
-    int* spin = lattice.spin;
-    bool* frozen = lattice.frozen;
-    for(int iz = 0; iz < lattice.nz; ++iz){
-        std::cerr << " <<< Layer " << iz << " >>>" << std::endl;
-        for(int ix = 0; ix < lattice.nx; ++ix){
-            for(int iy = 0; iy < lattice.ny; ++iy){
-                int site = lattice.find_site_index(ix, iy, iz);
-                char front = ' ';
-                char back  = ' ';
-                if(frozen[site]){
-                    front = '[';
-                    back  = ']';
-                }
-                if(spin[site] < 0)
-                    std::cerr << front << '-' << back << ' ';
-                else if(spin[site] == 0)
-                    std::cerr << front << 'O' << back << ' ';
-                else
-                    std::cerr << front << '+' << back << ' ';
-            }
-            std::cerr << std::endl;
-        }
-    }
-}
-
-//----------------------------------------------------------------------------//
-
-int calcE_for_two_connected_sites(ising::nodes& lattice,
-                                  int& orig_site, int& dest_site)
-{
-    int* spin = lattice.spin;
-    int E0_orig(0);
-    for(size_t ibr = 0; ibr < lattice.neighbors[orig_site].size();++ibr){
-        int nbr = lattice.neighbors[orig_site][ibr];
-        if(nbr != dest_site){
-            E0_orig -= spin[orig_site] * spin[nbr];
-        }
-    }
-
-    int E0_dest(0);
-    for(size_t ibr = 0; ibr < lattice.neighbors[dest_site].size();++ibr){
-        int nbr = lattice.neighbors[dest_site][ibr];
-        if(nbr != orig_site){
-            E0_dest -= spin[dest_site] * spin[nbr];
-        }
-    }
-
-    return E0_orig + E0_dest;
-}
 
 //----------------------------------------------------------------------------//
 
@@ -162,7 +84,7 @@ int do_ising(ising::nodes& lattice, const double T,
     {
         std::string comment("Initial configuration, T = ");
         comment += std::to_string(T);
-        print_cell(lattice, comment);
+        ising::print_cell(lattice, comment);
     }
 #endif
 
@@ -193,12 +115,12 @@ int do_ising(ising::nodes& lattice, const double T,
            && do_move){
 
             // Calculate the energy before the move
-            const int E0 = calcE_for_two_connected_sites(lattice,
+            const int E0 = ising::calcE_for_two_connected_sites(lattice,
                                                          orig_site, dest_site);
 
             // Create trial move by swapping the spins. Recalc Energy
-            swap_spins(lattice.spin, orig_site, dest_site);
-            const int E1 = calcE_for_two_connected_sites(lattice,
+            ising::swap_spins(lattice.spin, orig_site, dest_site);
+            const int E1 = ising::calcE_for_two_connected_sites(lattice,
                                                          orig_site, dest_site);
 
             const int dE = E1 - E0;
@@ -208,7 +130,7 @@ int do_ising(ising::nodes& lattice, const double T,
             double r = rand_01(generator);
             // Test if the move was REJECTED. If so, re-swap spins to undo move
             if( r > p){
-                swap_spins(lattice.spin, orig_site, dest_site);
+                ising::swap_spins(lattice.spin, orig_site, dest_site);
             }
         }
 
@@ -306,7 +228,7 @@ int do_ising(ising::nodes& lattice, const double T,
     {
         std::string comment("Final configuration, T = ");
         comment += std::to_string(T);
-        print_cell(lattice, comment);
+        ising::print_cell(lattice, comment);
     }
 #endif
 
@@ -333,9 +255,9 @@ int main(int argc, char** argv)
     }
 
     // Define lattice size and initialize it
-    int nx = read_command_line_arg(argv[1]);
-    int ny = read_command_line_arg(argv[2]);
-    int nz = read_command_line_arg(argv[3]);
+    int nx = ising::read_command_line_int(argv[1]);
+    int ny = ising::read_command_line_int(argv[2]);
+    int nz = ising::read_command_line_int(argv[3]);
 
 #ifdef ENABLE_MPI    
     MPI_Init(&argc, &argv);
@@ -364,7 +286,7 @@ int main(int argc, char** argv)
 
     // Determine how many sites are to be occupied
     {
-        int tmp = read_command_line_arg(argv[4]);
+        int tmp = ising::read_command_line_int(argv[4]);
         // If passed a negative number, make a fully occupied lattice
         if(tmp < 0){
             ndesiredOccupied = lattice.nsites;
