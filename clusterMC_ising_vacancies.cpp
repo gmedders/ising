@@ -125,34 +125,6 @@ int do_ising(ising::nodes& lattice, const double T,
             }
         }
 
-        // Calculate magnetization
-        int M(0);
-        for(int i = 0; i < lattice.nsites; ++i)
-            M += lattice.spin[i];
-
-        M_av += ((double)std::abs(M));
-        ++n_av;
-
-        // Calculate number density
-        int numNeighbor(0);
-        int numVertNeighbor(0);
-        for(int i = 0; i < lattice.nsites; ++i){
-            if(lattice.spin[i] != 0){
-                for(size_t ibr = 0; ibr < lattice.neighbors[i].size(); ++ibr){
-                    int nbr = lattice.neighbors[i][ibr];
-                    if(lattice.spin[nbr] != 0){
-                        ++numNeighbor;
-                        if(lattice.neighborVertical[i][ibr])
-                            ++numVertNeighbor;
-                    }
-                }
-            }
-        }
-
-        numNeighbor_av += ((double)numNeighbor);
-        numVertNeighbor_av += ((double)numVertNeighbor);
-        // Incremented n_av above in calculation of magnetization;
-
         const int n_spins_to_flip(1*noccupied);
         int n_flipped_spins(0);
         do{ // Sample until we have flipped the required number of spins
@@ -209,6 +181,9 @@ int do_ising(ising::nodes& lattice, const double T,
 
             n_flipped_spins += cluster.size();
         }while(n_flipped_spins < n_spins_to_flip);
+
+        ising::collect_stats(lattice, n_av, M_av,
+                             numNeighbor_av, numVertNeighbor_av);
 
     }
 

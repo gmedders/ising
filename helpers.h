@@ -12,4 +12,6 @@ namespace ising{
 
     int calcE_for_two_connected_sites(ising::nodes&, int&, int&);
 
+    void collect_stats(ising::nodes&, int&, double&, double&, double&);
+
 } // namespace ising

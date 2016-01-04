@@ -83,4 +83,39 @@ int calcE_for_two_connected_sites(ising::nodes& lattice,
     return E0_orig + E0_dest;
 }
 
+//----------------------------------------------------------------------------//
+
+void collect_stats(ising::nodes& lattice, int& n_av, double& M_av,
+                   double& numNeighbor_av, double& numVertNeighbor_av)
+{
+    // Calculate magnetization
+    int M(0);
+    for(int i = 0; i < lattice.nsites; ++i)
+        M += lattice.spin[i];
+
+    M_av += ((double)std::abs(M));
+    ++n_av;
+
+    // Calculate number density
+    int numNeighbor(0);
+    int numVertNeighbor(0);
+    for(int i = 0; i < lattice.nsites; ++i){
+        if(lattice.spin[i] != 0){
+            for(size_t ibr = 0; ibr < lattice.neighbors[i].size(); ++ibr){
+                int nbr = lattice.neighbors[i][ibr];
+                if(lattice.spin[nbr] != 0){
+                    ++numNeighbor;
+                    if(lattice.neighborVertical[i][ibr])
+                        ++numVertNeighbor;
+                }
+            }
+        }
+    }
+
+    numNeighbor_av += ((double)numNeighbor);
+    numVertNeighbor_av += ((double)numVertNeighbor);
+}
+
+//----------------------------------------------------------------------------//
+
 } // namespace ising
