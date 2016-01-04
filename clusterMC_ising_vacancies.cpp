@@ -169,13 +169,14 @@ int do_ising(ising::nodes& lattice, const double T,
     // Required number of attempted moves to grow with number of lattice sites
     for(size_t imove = 0; imove < nmove*lattice.nsites; ++imove){
 
+        bool do_move = true;
         // For move, select a random site (orig)
         //           and a random neighboring site, including diagonals (dest)
         int orig_site = rand_lattice_site(generator);
 #ifdef ANYWHERE
         int dest_site = rand_lattice_site(generator);
         if(orig_site == dest_site)
-            continue;
+            do_move = false;
 #else
         std::uniform_int_distribution<int>
                    rand_neighbor(0,lattice.diagNeighbors[orig_site].size() - 1);
@@ -185,11 +186,11 @@ int do_ising(ising::nodes& lattice, const double T,
 
         // Do not allow moves between sites when one is frozen
         if(lattice.frozen[orig_site] || lattice.frozen[dest_site])
-            continue;
+            do_move = false;
 
-        bool rejected(true);
         // Ensure that the move is not trivial
-        if(lattice.spin[orig_site] != lattice.spin[dest_site]){
+        if(lattice.spin[orig_site] != lattice.spin[dest_site]
+           && do_move){
 
             // Calculate the energy before the move
             const int E0 = calcE_for_two_connected_sites(lattice,
@@ -208,7 +209,6 @@ int do_ising(ising::nodes& lattice, const double T,
             // Test if the move was REJECTED. If so, re-swap spins to undo move
             if( r > p){
                 swap_spins(lattice.spin, orig_site, dest_site);
-                rejected = false;
             }
         }
 
@@ -239,29 +239,6 @@ int do_ising(ising::nodes& lattice, const double T,
         numNeighbor_av += ((double)numNeighbor);
         numVertNeighbor_av += ((double)numVertNeighbor);
         // Incremented n_av above in calculation of magnetization;
-
-#if 0
-        if(imove % 1 == 0 && rejected == false){
-            int orig_ix = 1 + (orig_site/lattice.nz/lattice.ny)%lattice.nx;
-            int orig_iy = 1 + (orig_site/lattice.nz)%lattice.ny;
-            int dest_ix = 1 + (dest_site/lattice.nz/lattice.ny)%lattice.nx;
-            int dest_iy = 1 + (dest_site/lattice.nz)%lattice.ny;
-            std::stringstream ss;
-	    ss << " <<<<<<< step: " << imove<< ", swapped [(" 
-               << orig_ix << ',' << orig_iy << ") <=> ("
-               << dest_ix << ',' << dest_iy << ")]"
-               << ". M_inst = "
-               << M/((double)noccupied)
-               << ". <M> = "
-               << ((double)M_av)/((double)n_av)/((double)noccupied) << ' '
-               << ((double)numNeighbor)/((double)noccupied) << ' '
-               << ((double)numNeighbor - numVertNeighbor)/((double)noccupied) << ' '
-               << ((double)numVertNeighbor)/((double)noccupied) << ' '
-               << " >>>>>>>" << std::endl;
-
-            print_cell(lattice, spin, ss.str());
-        }
-#endif
 
         const int n_spins_to_flip(1*noccupied);
         int n_flipped_spins(0);
