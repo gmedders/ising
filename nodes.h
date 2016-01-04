@@ -9,6 +9,7 @@ namespace ising {
 
 struct nodes {
     inline nodes();
+    ~nodes();
 
     void init(int, int, int);
     void report();
@@ -22,13 +23,17 @@ struct nodes {
     int nz;
     int nsites;
 
+    bool* frozen;
+    int* spin;
+
     std::vector< std::vector<int> > neighbors;
     std::vector< std::vector<bool> > neighborVertical;
 //    std::vector< std::vector<int> > diagNeighbors;
 };
 
 inline nodes::nodes()
-: nx(0), ny(0), nz(0), nsites(0), neighbors(0), neighborVertical(0)
+: nx(0), ny(0), nz(0), nsites(0), frozen(0), spin(0),
+  neighbors(0), neighborVertical(0)
 {
 }
 

@@ -21,6 +21,14 @@ namespace ising {
    
 //----------------------------------------------------------------------------//
 
+nodes::~nodes()
+{
+    if(frozen != 0)
+        delete[] frozen;
+    if(spin != 0)
+        delete[] spin;
+}
+
 void nodes::init(int my_nx, int my_ny, int my_nz)
 {
     nx = my_nx;
@@ -37,6 +45,14 @@ void nodes::init(int my_nx, int my_ny, int my_nz)
 	exit(1);
     }
 
+    // Allocate arrays
+    frozen = new bool[nsites];
+    std::fill(frozen, frozen + nsites, false); // Init to unfrozen occupancy
+
+    spin = new int[nsites];
+    std::fill(spin, spin + nsites, 0); // Initialize to unoccupied
+
+    // Determine neighbor connectivity
     determine_connectivity();
 }
 

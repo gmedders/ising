@@ -20,6 +20,7 @@
 #define ANYWHERE doit
 #define FIXED_NUMBER yes
 #define CONDENSED yes
+#define FROZEN yes
 
 #define VERBOSE yes
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,29 +60,40 @@ void swap_spins(int* spin, int& orig, int& dest)
 
 //----------------------------------------------------------------------------//
 
-void print_cell(ising::nodes& lattice, const int* spin, std::string comment)
+void print_cell(ising::nodes& lattice, std::string comment)
 {    
     std::cerr << comment << std::endl;
-    int iz(0);
-    for(int ix = 0; ix < lattice.nx; ++ix){
-        for(int iy = 0; iy < lattice.ny; ++iy){
-            int site = lattice.find_site_index(ix, iy, iz);
-            if(spin[site] < 0)
-                std::cerr << std::setw(2) << '-';
-            else if(spin[site] == 0)
-                std::cerr << std::setw(2) << 'O';
-            else
-                std::cerr << std::setw(2) << '+';
+    int* spin = lattice.spin;
+    bool* frozen = lattice.frozen;
+    for(int iz = 0; iz < lattice.nz; ++iz){
+        std::cerr << " <<< Layer " << iz << " >>>" << std::endl;
+        for(int ix = 0; ix < lattice.nx; ++ix){
+            for(int iy = 0; iy < lattice.ny; ++iy){
+                int site = lattice.find_site_index(ix, iy, iz);
+                char front = ' ';
+                char back  = ' ';
+                if(frozen[site]){
+                    front = '[';
+                    back  = ']';
+                }
+                if(spin[site] < 0)
+                    std::cerr << front << '-' << back << ' ';
+                else if(spin[site] == 0)
+                    std::cerr << front << 'O' << back << ' ';
+                else
+                    std::cerr << front << '+' << back << ' ';
+            }
+            std::cerr << std::endl;
         }
-        std::cerr << std::endl;
     }
 }
 
 //----------------------------------------------------------------------------//
 
-int calcE_for_two_connected_sites(ising::nodes& lattice, int* spin,
+int calcE_for_two_connected_sites(ising::nodes& lattice,
                                   int& orig_site, int& dest_site)
 {
+    int* spin = lattice.spin;
     int E0_orig(0);
     for(size_t ibr = 0; ibr < lattice.neighbors[orig_site].size();++ibr){
         int nbr = lattice.neighbors[orig_site][ibr];
@@ -103,7 +115,7 @@ int calcE_for_two_connected_sites(ising::nodes& lattice, int* spin,
 
 //----------------------------------------------------------------------------//
 
-int do_ising(ising::nodes& lattice, int* spin, const double T,
+int do_ising(ising::nodes& lattice, const double T,
              std::default_random_engine& generator,
              double& M_av, double& numNeighbor_av, double& numVertNeighbor_av)
 {
@@ -120,17 +132,17 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
     // Randomly zero out the spins for half the sites
     int noccupied(0);
     for(int i = 0; i < lattice.nsites; ++i)
-        if(spin[i] != 0)
+        if(lattice.spin[i] != 0)
             ++noccupied;
     if(noccupied > (ndesiredOccupied)){
         do{
 
             int delete_this_site = rand_lattice_site(generator);
-            spin[delete_this_site] = 0;
+            lattice.spin[delete_this_site] = 0;
 
             noccupied = 0;
             for(int i = 0; i < lattice.nsites; ++i)
-                if(spin[i] != 0)
+                if(lattice.spin[i] != 0)
                     ++noccupied;
 
         }while(noccupied > (ndesiredOccupied));
@@ -148,8 +160,9 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
     if(my_rank == 0)
 #endif
     {
-        std::string comment("Initial configuration");
-        print_cell(lattice, spin, comment);
+        std::string comment("Initial configuration, T = ");
+        comment += std::to_string(T);
+        print_cell(lattice, comment);
     }
 #endif
 
@@ -170,17 +183,21 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
                      lattice.diagNeighbors[orig_site][rand_neighbor(generator)];
 #endif
 
+        // Do not allow moves between sites when one is frozen
+        if(lattice.frozen[orig_site] || lattice.frozen[dest_site])
+            continue;
+
         bool rejected(true);
         // Ensure that the move is not trivial
-        if(spin[orig_site] != spin[dest_site]){
+        if(lattice.spin[orig_site] != lattice.spin[dest_site]){
 
             // Calculate the energy before the move
-            const int E0 = calcE_for_two_connected_sites(lattice, spin,
+            const int E0 = calcE_for_two_connected_sites(lattice,
                                                          orig_site, dest_site);
 
             // Create trial move by swapping the spins. Recalc Energy
-            swap_spins(spin, orig_site, dest_site);
-            const int E1 = calcE_for_two_connected_sites(lattice, spin,
+            swap_spins(lattice.spin, orig_site, dest_site);
+            const int E1 = calcE_for_two_connected_sites(lattice,
                                                          orig_site, dest_site);
 
             const int dE = E1 - E0;
@@ -190,7 +207,7 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
             double r = rand_01(generator);
             // Test if the move was REJECTED. If so, re-swap spins to undo move
             if( r > p){
-                swap_spins(spin, orig_site, dest_site);
+                swap_spins(lattice.spin, orig_site, dest_site);
                 rejected = false;
             }
         }
@@ -198,7 +215,7 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
         // Calculate magnetization
         int M(0);
         for(int i = 0; i < lattice.nsites; ++i)
-            M += spin[i];
+            M += lattice.spin[i];
 
         M_av += ((double)std::abs(M));
         ++n_av;
@@ -207,10 +224,10 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
         int numNeighbor(0);
         int numVertNeighbor(0);
         for(int i = 0; i < lattice.nsites; ++i){
-            if(spin[i] != 0){
+            if(lattice.spin[i] != 0){
                 for(size_t ibr = 0; ibr < lattice.neighbors[i].size(); ++ibr){
                     int nbr = lattice.neighbors[i][ibr];
-                    if(spin[nbr] != 0){
+                    if(lattice.spin[nbr] != 0){
                         ++numNeighbor;
                         if(lattice.neighborVertical[i][ibr])
                             ++numVertNeighbor;
@@ -253,7 +270,7 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
             int initial_site(-1);
             do{ // Make sure that the site is occupied
                 int tmp = rand_lattice_site(generator);
-                if(spin[tmp] != 0)
+                if(lattice.spin[tmp] != 0)
                     initial_site = tmp;
             }while(initial_site < 0);
 
@@ -283,7 +300,7 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
                     // If the active site and neighbor have the same spin,
                     // && current neighbor not already in cluster
                     // && detailed balance is satisified ( rand < pCluster ) 
-                    if(( spin[active_site] == spin[nbr] )
+                    if(( lattice.spin[active_site] == lattice.spin[nbr] )
                        && ( std::find(cluster.begin(), cluster.end(), nbr)
                                                                == cluster.end())
                        && ( rand_01(generator) < pCluster))
@@ -298,25 +315,25 @@ int do_ising(ising::nodes& lattice, int* spin, const double T,
 
             // Now, flip the spins of the entire cluster
             for(size_t i = 0; i < cluster.size(); ++i)
-                spin[cluster[i]] *= -1;
+                lattice.spin[cluster[i]] *= -1;
 
             n_flipped_spins += cluster.size();
         }while(n_flipped_spins < n_spins_to_flip);
 
     }
 
-    return n_av;
+#ifdef VERBOSE
+#ifdef ENABLE_MPI
+    if(my_rank == 0)
+#endif
+    {
+        std::string comment("Final configuration, T = ");
+        comment += std::to_string(T);
+        print_cell(lattice, comment);
+    }
+#endif
 
-//    std::cout << std::setw(12) << T
-//	      << std::setw(12) << ((double)M_av)/((double)n_av)
-//						/((double)noccupied)
-//	      << std::setw(12) << ((double)numNeighbor_av)/((double)n_av)
-//						         /((double)noccupied)
-//	      << std::setw(12) << ((double)numNeighbor_av - numVertNeighbor_av)
-//                                                       /((double)numNeighbor_av)
-//	      << std::setw(12) << ((double)numVertNeighbor_av)
-//                                                       /((double)numNeighbor_av)
-//	      << std::setw(12) << n_av << std::endl;
+    return n_av;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -406,6 +423,21 @@ int main(int argc, char** argv)
     std::default_random_engine generator(19103);
 #endif
 
+#ifdef FROZEN
+#ifdef ENABLE_MPI
+    if(my_rank == 0)
+#endif
+        std::cout << "# Freezing occupancy of bottom layer" << std::endl;
+    // Freeze occupancy of bottom layer
+    for(int iz = 0; iz < 1; ++iz){
+        for(int iy = 0; iy < lattice.ny; ++iy){
+            for(int ix = 0; ix < lattice.nx; ++ix){
+                lattice.frozen[lattice.find_site_index(ix, iy, iz)] = true;
+            }
+        }
+    }
+#endif
+
 #ifdef CONDENSED
     int num_inited_sites(0);
     for(int iz = 0; iz < lattice.nz; ++iz){
@@ -436,14 +468,13 @@ int main(int argc, char** argv)
     for(size_t i = 0; i < nT; ++i){
 	double T = T0 + dT*i;
 
-        int spin[lattice.nsites];
-        std::copy(initial_spin, initial_spin + lattice.nsites, spin);
+        std::copy(initial_spin, initial_spin + lattice.nsites, lattice.spin);
 
         double my_M_av(0);
         double my_numNeighbor_av(0);
         double my_numVertNeighbor_av(0);
 
-	int my_n_av = do_ising(lattice, spin, T, generator, my_M_av,
+	int my_n_av = do_ising(lattice, T, generator, my_M_av,
                                my_numNeighbor_av, my_numVertNeighbor_av);
 
         // This is checked in do_ising()
