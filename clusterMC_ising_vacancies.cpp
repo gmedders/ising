@@ -18,7 +18,6 @@
 #include "nodes.h"
 #include "helpers.h"
 
-#define ANYWHERE doit
 #define FIXED_NUMBER yes
 #define CONDENSED yes
 #define FROZEN yes
@@ -92,28 +91,20 @@ int do_ising(ising::nodes& lattice, const double T,
     for(size_t imove = 0; imove < nmove*lattice.nsites; ++imove){
 
         bool do_move = true;
-        // For move, select a random site (orig)
-        //           and a random neighboring site, including diagonals (dest)
+        // For move, select two random sites (orig, dest) of different spin
         int orig_site = rand_lattice_site(generator);
-#ifdef ANYWHERE
         int dest_site = rand_lattice_site(generator);
-        if(orig_site == dest_site)
+        if(orig_site == dest_site
+           || (lattice.spin[orig_site] == lattice.spin[dest_site])){
             do_move = false;
-#else
-        std::uniform_int_distribution<int>
-                   rand_neighbor(0,lattice.diagNeighbors[orig_site].size() - 1);
-        int dest_site =
-                     lattice.diagNeighbors[orig_site][rand_neighbor(generator)];
-#endif
+        }
 
         // Do not allow moves between sites when one is frozen
         if(lattice.frozen[orig_site] || lattice.frozen[dest_site])
             do_move = false;
 
-        // Ensure that the move is not trivial
-        if(lattice.spin[orig_site] != lattice.spin[dest_site]
-           && do_move){
-
+        // If move is allowed
+        if(do_move){
             // Calculate the energy before the move
             const int E0 = ising::calcE_for_two_connected_sites(lattice,
                                                          orig_site, dest_site);
