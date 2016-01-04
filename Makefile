@@ -2,8 +2,7 @@ CXX = icpc
 CXXFLAGS = -O3 -Wall -std=c++11
 
 all: clusterMC_ising_thermo_prop clusterMC_ising_vacancies \
-     localMC_ising_thermo_prop
-     #localMC_ising_thermo_prop localMC_ising_vacancies
+     localMC_ising_thermo_prop localMC_ising_vacancies
 
 clusterMC_ising_thermo_prop: clusterMC_ising_thermo_prop.o nodes.o helpers.o
 	$(CXX) -o clusterMC_ising_thermo_prop clusterMC_ising_thermo_prop.o \
@@ -15,6 +14,10 @@ clusterMC_ising_vacancies: clusterMC_ising_vacancies.o nodes.o helpers.o
 
 localMC_ising_thermo_prop: localMC_ising_thermo_prop.o nodes.o helpers.o
 	$(CXX) -o localMC_ising_thermo_prop localMC_ising_thermo_prop.o \
+	    nodes.o helpers.o
+
+localMC_ising_vacancies: localMC_ising_vacancies.o nodes.o helpers.o
+	$(CXX) -o localMC_ising_vacancies localMC_ising_vacancies.o \
 	    nodes.o helpers.o
 
 check: test-random-shuffle
