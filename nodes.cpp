@@ -29,11 +29,14 @@ nodes::~nodes()
         delete[] spin;
 }
 
-void nodes::init(int my_nx, int my_ny, int my_nz)
+//----------------------------------------------------------------------------//
+
+void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction)
 {
     nx = my_nx;
     ny = my_ny;
     nz = my_nz;
+    kInteraction = my_kInteraction;
 
     nsites = nx*ny*nz;
 
@@ -56,6 +59,15 @@ void nodes::init(int my_nx, int my_ny, int my_nz)
     determine_connectivity();
 }
 
+//----------------------------------------------------------------------------//
+
+void nodes::init(int my_nx, int my_ny, int my_nz)
+{
+    nodes::init(my_nx, my_ny, my_nz, 0.0);
+}
+
+//----------------------------------------------------------------------------//
+
 void nodes::report()
 {
 #ifdef PBC
@@ -68,6 +80,15 @@ void nodes::report()
     std::cerr << "# Slab geometry: PBC only in XY" << std::endl;
     std::cout << "# Slab geometry: PBC only in XY" << std::endl;
 #endif
+    if(kInteraction == 0){
+        std::cerr << "# Using standard Ising model Hamiltonian" << std::endl;
+        std::cout << "# Using standard Ising model Hamiltonian" << std::endl;
+    }else{
+        std::cerr << "# Using Ising model with Surface Tension parameter k = "
+                  << kInteraction << std::endl;
+        std::cout << "# Using Ising model with Surface Tension parameter k = "
+                  << kInteraction << std::endl;
+    }
 }
 
 //----------------------------------------------------------------------------//
@@ -172,6 +193,31 @@ void nodes::determine_connectivity()
 	}
     }
 
+}
+
+//----------------------------------------------------------------------------//
+
+double nodes::calcE_for_one_site(ising::nodes& lattice, int& site)
+{
+    int* spin = lattice.spin;
+    double E(0);
+    for(size_t ibr = 0; ibr < lattice.neighbors[site].size();++ibr){
+        int nbr = lattice.neighbors[site][ibr];
+        double ss = spin[site] * spin[nbr];
+        E -= ( ss + kInteraction*ss*ss );
+    }
+    return E;
+}
+
+//----------------------------------------------------------------------------//
+
+double nodes::calcE_for_two_sites(ising::nodes& lattice,
+                                  int& site_a, int& site_b)
+{
+    double E0_a = calcE_for_one_site(lattice, site_a);
+    double E0_b = calcE_for_one_site(lattice, site_b);
+
+    return E0_a + E0_b;
 }
 
 //----------------------------------------------------------------------------//

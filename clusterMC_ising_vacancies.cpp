@@ -85,15 +85,15 @@ int do_ising(ising::nodes& lattice, const double T,
         // If move is allowed
         if(do_move){
             // Calculate the energy before the move
-            const int E0 = ising::calcE_for_two_sites(lattice,
+            const double E0 = lattice.calcE_for_two_sites(lattice,
                                                           orig_site, dest_site);
 
             // Create trial move by swapping the spins. Recalc Energy
             ising::swap_spins(lattice.spin, orig_site, dest_site);
-            const int E1 = ising::calcE_for_two_sites(lattice,
+            const double E1 = lattice.calcE_for_two_sites(lattice,
                                                           orig_site, dest_site);
 
-            const int dE = E1 - E0;
+            const double dE = E1 - E0;
 
             // Monte-Carlo acceptance criteria
             double p = std::exp(-beta*dE);
@@ -188,12 +188,12 @@ int do_ising(ising::nodes& lattice, const double T,
 
 int main(int argc, char** argv)
 {
-    if (argc != 5) {
+    if (argc != 6) {
         std::cerr << "usage: clusterMC_ising_vacancies "
 #ifdef FIXED_NUMBER
-                  << "nx ny nz #_occupied > a.dat"
+                  << "nx ny nz kInteraction #_occupied > a.dat"
 #else
-                  << "nx ny nz \%_occupied > a.dat"
+                  << "nx ny nz kInteraction \%_occupied > a.dat"
 #endif
                   << std::endl;
         return EXIT_FAILURE;
@@ -213,6 +213,8 @@ int main(int argc, char** argv)
     nmove /= my_size;
 #endif
 
+    double kInteraction = ising::read_command_line_double(argv[4]);
+
 #ifdef ENABLE_MPI
     if(my_rank == 0)
 #endif
@@ -222,16 +224,11 @@ int main(int argc, char** argv)
                       << nz << " grid." << std::endl;
 
     ising::nodes lattice;
-    lattice.init(nx, ny, nz);
-
-#ifdef ENABLE_MPI
-    if(my_rank == 0)
-#endif
-    lattice.report();
+    lattice.init(nx, ny, nz, kInteraction);
 
     // Determine how many sites are to be occupied
     {
-        int tmp = ising::read_command_line_int(argv[4]);
+        int tmp = ising::read_command_line_int(argv[5]);
         // If passed a negative number, make a fully occupied lattice
         if(tmp < 0){
             ndesiredOccupied = lattice.nsites;
@@ -256,6 +253,11 @@ int main(int argc, char** argv)
                   << " occupied out of " << lattice.nsites << " total sites"
                   << std::endl;
     }
+
+#ifdef ENABLE_MPI
+    if(my_rank == 0)
+#endif
+    lattice.report();
 
     // Set up the initial spins
     int initial_spin[lattice.nsites];

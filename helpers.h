@@ -7,13 +7,11 @@
 namespace ising{
 
     int read_command_line_int(char*);
+    double read_command_line_double(char*);
 
     void swap_spins(int*, int&, int&);
 
     void print_cell(ising::nodes&, std::string);
-
-    int calcE_for_one_site(ising::nodes&, int&);
-    int calcE_for_two_sites(ising::nodes&, int&, int&);
 
     void collect_stats(ising::nodes&, int&, double&, double&, double&);
 

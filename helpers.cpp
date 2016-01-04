@@ -21,6 +21,21 @@ int read_command_line_int(char* argv)
 
 //----------------------------------------------------------------------------//
 
+double read_command_line_double(char* argv)
+{
+    double val;
+    std::istringstream iss(argv);
+    iss >> val; 
+    if (!iss || !iss.eof()) {
+        std::cerr << "could not convert '" << argv
+            << "' to double" << std::endl;
+        return EXIT_FAILURE;
+    }
+    return val;
+}
+
+//----------------------------------------------------------------------------//
+
 void swap_spins(int* spin, int& orig, int& dest)
 {
     int tmp = spin[dest];
@@ -56,29 +71,6 @@ void print_cell(ising::nodes& lattice, std::string comment)
             std::cerr << std::endl;
         }
     }
-}
-
-//----------------------------------------------------------------------------//
-
-int calcE_for_one_site(ising::nodes& lattice, int& site)
-{
-    int* spin = lattice.spin;
-    int E(0);
-    for(size_t ibr = 0; ibr < lattice.neighbors[site].size();++ibr){
-        int nbr = lattice.neighbors[site][ibr];
-        E -= spin[site] * spin[nbr];
-    }
-    return E;
-}
-
-//----------------------------------------------------------------------------//
-
-int calcE_for_two_sites(ising::nodes& lattice, int& site_a, int& site_b)
-{
-    int E0_a = calcE_for_one_site(lattice, site_a);
-    int E0_b = calcE_for_one_site(lattice, site_b);
-
-    return E0_a + E0_b;
 }
 
 //----------------------------------------------------------------------------//
@@ -148,5 +140,7 @@ int generated_desired_occupancy(ising::nodes& lattice,
     }
     return noccupied;
 }
+
+//----------------------------------------------------------------------------//
 
 } // namespace ising
