@@ -154,7 +154,7 @@ int do_ising(ising::nodes& lattice, const double T,
 int main(int argc, char** argv)
 {
     if (argc != 5) {
-        std::cerr << "usage: clusterMC_ising_vacancies "
+        std::cerr << "usage: localMC_ising_vacancies "
 #ifdef FIXED_NUMBER
                   << "nx ny nz #_occupied > a.dat"
 #else
@@ -182,7 +182,7 @@ int main(int argc, char** argv)
     if(my_rank == 0)
 #endif
     // Now have all information needed to set up the lattice sites
-    std::cout << "# clusterMC_ising_vacancies.cpp\n"
+    std::cout << "# localMC_ising_vacancies.cpp\n"
               << "# Initializing a " << nx << " x " << ny << " x "
                       << nz << " grid." << std::endl;
 
