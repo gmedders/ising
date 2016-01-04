@@ -103,64 +103,28 @@ int do_ising(ising::nodes& lattice, const double T,
             }
         }
 
-#if 0
         const int n_spins_to_flip(1*noccupied);
-        int n_flipped_spins(0);
-        do{ // Sample until we have flipped the required number of spins
+        for(int n = 0; n < n_spins_to_flip; ++n){
 
-            int initial_site(-1);
-            do{ // Make sure that the site is occupied
-                int tmp = rand_lattice_site(generator);
-                if(lattice.spin[tmp] != 0)
-                    initial_site = tmp;
-            }while(initial_site < 0);
+            int active_site = rand_lattice_site(generator);
 
-            // The "pocket" will contain the list of candidate sites whose spins
-            // we want to attempt to fliip
-            std::vector<int> pocket;
-            pocket.push_back(initial_site);
-            // The "cluster" is the MC cluster that is grown with acceptance
-            // probability P to ensure detailed balance
-            std::vector<int> cluster;
-            cluster.push_back(initial_site);
+            // Now loop over the neighbors (nbr) of the active_site
+            int E0 = (0);
+            for(size_t ibr = 0; ibr < lattice.neighbors[active_site].size(); ++ibr){
+                int nbr = lattice.neighbors[active_site][ibr];
 
-            do{ // Grow cluster until it can no longer expand
+                E0 -= lattice.spin[active_site] * lattice.spin[nbr];
+            }
 
-                // Randomize the ordering of sites within the pocket
-                std::random_shuffle(pocket.begin(), pocket.end());
+            // Change in energy for ising model is (E' - E0) == -2.0*E0
+            double dE = -2.0*E0;
 
-                // Select the last element of the pocket and delete it
-                int active_site = pocket.back();
-                pocket.pop_back();
-
-                // Now loop over the neighbors of the active_site
-                for(size_t ibr = 0; ibr < lattice.neighbors[active_site].size();
-                    ++ibr){
-                    int nbr = lattice.neighbors[active_site][ibr];
-
-                    // If the active site and neighbor have the same spin,
-                    // && current neighbor not already in cluster
-                    // && detailed balance is satisified ( rand < pCluster ) 
-                    if(( lattice.spin[active_site] == lattice.spin[nbr] )
-                       && ( std::find(cluster.begin(), cluster.end(), nbr)
-                                                               == cluster.end())
-                       && ( rand_01(generator) < pCluster))
-                    {// Then add the neighbor to the cluster and pocket
-                        cluster.push_back(nbr);
-                        pocket.push_back(nbr);
-                    }
-
-                }
-
-            }while(pocket.size() != 0);
-
-            // Now, flip the spins of the entire cluster
-            for(size_t i = 0; i < cluster.size(); ++i)
-                lattice.spin[cluster[i]] *= -1;
-
-            n_flipped_spins += cluster.size();
-        }while(n_flipped_spins < n_spins_to_flip);
-#endif
+            // Monte-Carlo acceptance criteria
+            double p = std::min(1.0, std::exp(-beta*dE));
+            if( rand_01(generator) < p){
+                lattice.spin[active_site] *= -1;
+            }
+        }
 
         ising::collect_stats(lattice, n_av, M_av,
                              numNeighbor_av, numVertNeighbor_av);
