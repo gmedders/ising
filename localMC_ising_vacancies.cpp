@@ -42,39 +42,17 @@ int do_ising(ising::nodes& lattice, const double T,
 {
     int n_av(0);
 
-    // Cluster expansion probability for a 2D ising model with all sites filled
     double beta = 1.0/T;
-    const double pCluster = 1.0 - std::exp(-2.0 * beta);
 
     // Set up random numbers
     std::uniform_int_distribution<int> rand_lattice_site(0,lattice.nsites - 1);
     std::uniform_real_distribution<double> rand_01(0.0, 1.0);
 
     // Randomly zero out the spins for half the sites
-    int noccupied(0);
-    for(int i = 0; i < lattice.nsites; ++i)
-        if(lattice.spin[i] != 0)
-            ++noccupied;
-    if(noccupied > (ndesiredOccupied)){
-        do{
-
-            int delete_this_site = rand_lattice_site(generator);
-            lattice.spin[delete_this_site] = 0;
-
-            noccupied = 0;
-            for(int i = 0; i < lattice.nsites; ++i)
-                if(lattice.spin[i] != 0)
-                    ++noccupied;
-
-        }while(noccupied > (ndesiredOccupied));
-    }
-
-    if(noccupied != ndesiredOccupied){
-        std::cerr << "Function to create vacancies not working as expected.\n"
-                  << " expected " << ndesiredOccupied << " occupied sites but"
-                  << " found " << noccupied<< std::endl;
-        exit(1);
-    }
+    int noccupied = ising::generated_desired_occupancy(lattice,
+                                                       generator,
+                                                       rand_lattice_site,
+                                                       ndesiredOccupied);
 
 #ifdef VERBOSE
 #ifdef ENABLE_MPI
@@ -125,6 +103,7 @@ int do_ising(ising::nodes& lattice, const double T,
             }
         }
 
+#if 0
         const int n_spins_to_flip(1*noccupied);
         int n_flipped_spins(0);
         do{ // Sample until we have flipped the required number of spins
@@ -181,6 +160,7 @@ int do_ising(ising::nodes& lattice, const double T,
 
             n_flipped_spins += cluster.size();
         }while(n_flipped_spins < n_spins_to_flip);
+#endif
 
         ising::collect_stats(lattice, n_av, M_av,
                              numNeighbor_av, numVertNeighbor_av);

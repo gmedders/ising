@@ -50,31 +50,10 @@ int do_ising(ising::nodes& lattice, const double T,
     std::uniform_int_distribution<int> rand_lattice_site(0,lattice.nsites - 1);
     std::uniform_real_distribution<double> rand_01(0.0, 1.0);
 
-    // Randomly zero out the spins for half the sites
-    int noccupied(0);
-    for(int i = 0; i < lattice.nsites; ++i)
-        if(lattice.spin[i] != 0)
-            ++noccupied;
-    if(noccupied > (ndesiredOccupied)){
-        do{
-
-            int delete_this_site = rand_lattice_site(generator);
-            lattice.spin[delete_this_site] = 0;
-
-            noccupied = 0;
-            for(int i = 0; i < lattice.nsites; ++i)
-                if(lattice.spin[i] != 0)
-                    ++noccupied;
-
-        }while(noccupied > (ndesiredOccupied));
-    }
-
-    if(noccupied != ndesiredOccupied){
-        std::cerr << "Function to create vacancies not working as expected.\n"
-                  << " expected " << ndesiredOccupied << " occupied sites but"
-                  << " found " << noccupied<< std::endl;
-        exit(1);
-    }
+    int noccupied = ising::generated_desired_occupancy(lattice,
+                                                       generator,
+                                                       rand_lattice_site,
+                                                       ndesiredOccupied);
 
 #ifdef VERBOSE
 #ifdef ENABLE_MPI
