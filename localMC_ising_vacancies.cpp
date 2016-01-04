@@ -95,7 +95,7 @@ int do_ising(ising::nodes& lattice, const double T,
             const int dE = E1 - E0;
 
             // Monte-Carlo acceptance criteria
-            double p = std::min(1.0, std::exp(-beta*dE));
+            double p = std::exp(-beta*dE);
             double r = rand_01(generator);
             // Test if the move was REJECTED. If so, re-swap spins to undo move
             if( r > p){
@@ -113,7 +113,7 @@ int do_ising(ising::nodes& lattice, const double T,
             double dE = -2.0*E0;
 
             // Monte-Carlo acceptance criteria
-            double p = std::min(1.0, std::exp(-beta*dE));
+            double p = std::exp(-beta*dE);
             if( rand_01(generator) < p){
                 lattice.spin[active_site] *= -1;
             }
