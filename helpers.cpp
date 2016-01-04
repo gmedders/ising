@@ -60,27 +60,25 @@ void print_cell(ising::nodes& lattice, std::string comment)
 
 //----------------------------------------------------------------------------//
 
-int calcE_for_two_connected_sites(ising::nodes& lattice,
-                                  int& orig_site, int& dest_site)
+int calcE_for_one_site(ising::nodes& lattice, int& site)
 {
     int* spin = lattice.spin;
-    int E0_orig(0);
-    for(size_t ibr = 0; ibr < lattice.neighbors[orig_site].size();++ibr){
-        int nbr = lattice.neighbors[orig_site][ibr];
-        if(nbr != dest_site){
-            E0_orig -= spin[orig_site] * spin[nbr];
-        }
+    int E(0);
+    for(size_t ibr = 0; ibr < lattice.neighbors[site].size();++ibr){
+        int nbr = lattice.neighbors[site][ibr];
+        E -= spin[site] * spin[nbr];
     }
+    return E;
+}
 
-    int E0_dest(0);
-    for(size_t ibr = 0; ibr < lattice.neighbors[dest_site].size();++ibr){
-        int nbr = lattice.neighbors[dest_site][ibr];
-        if(nbr != orig_site){
-            E0_dest -= spin[dest_site] * spin[nbr];
-        }
-    }
+//----------------------------------------------------------------------------//
 
-    return E0_orig + E0_dest;
+int calcE_for_two_sites(ising::nodes& lattice, int& site_a, int& site_b)
+{
+    int E0_a = calcE_for_one_site(lattice, site_a);
+    int E0_b = calcE_for_one_site(lattice, site_b);
+
+    return E0_a + E0_b;
 }
 
 //----------------------------------------------------------------------------//

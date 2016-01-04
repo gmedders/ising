@@ -84,13 +84,13 @@ int do_ising(ising::nodes& lattice, const double T,
         // If move is allowed
         if(do_move){
             // Calculate the energy before the move
-            const int E0 = ising::calcE_for_two_connected_sites(lattice,
-                                                         orig_site, dest_site);
+            const int E0 = ising::calcE_for_two_sites(lattice,
+                                                          orig_site, dest_site);
 
             // Create trial move by swapping the spins. Recalc Energy
             ising::swap_spins(lattice.spin, orig_site, dest_site);
-            const int E1 = ising::calcE_for_two_connected_sites(lattice,
-                                                         orig_site, dest_site);
+            const int E1 = ising::calcE_for_two_sites(lattice,
+                                                          orig_site, dest_site);
 
             const int dE = E1 - E0;
 
@@ -108,15 +108,8 @@ int do_ising(ising::nodes& lattice, const double T,
 
             int active_site = rand_lattice_site(generator);
 
-            // Now loop over the neighbors (nbr) of the active_site
-            int E0 = (0);
-            for(size_t ibr = 0; ibr < lattice.neighbors[active_site].size(); ++ibr){
-                int nbr = lattice.neighbors[active_site][ibr];
-
-                E0 -= lattice.spin[active_site] * lattice.spin[nbr];
-            }
-
             // Change in energy for ising model is (E' - E0) == -2.0*E0
+            int E0 = calcE_for_one_site(lattice, active_site);
             double dE = -2.0*E0;
 
             // Monte-Carlo acceptance criteria

@@ -12,7 +12,8 @@ namespace ising{
 
     void print_cell(ising::nodes&, std::string);
 
-    int calcE_for_two_connected_sites(ising::nodes&, int&, int&);
+    int calcE_for_one_site(ising::nodes&, int&);
+    int calcE_for_two_sites(ising::nodes&, int&, int&);
 
     void collect_stats(ising::nodes&, int&, double&, double&, double&);
 

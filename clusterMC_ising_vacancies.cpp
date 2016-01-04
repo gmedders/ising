@@ -85,13 +85,13 @@ int do_ising(ising::nodes& lattice, const double T,
         // If move is allowed
         if(do_move){
             // Calculate the energy before the move
-            const int E0 = ising::calcE_for_two_connected_sites(lattice,
-                                                         orig_site, dest_site);
+            const int E0 = ising::calcE_for_two_sites(lattice,
+                                                          orig_site, dest_site);
 
             // Create trial move by swapping the spins. Recalc Energy
             ising::swap_spins(lattice.spin, orig_site, dest_site);
-            const int E1 = ising::calcE_for_two_connected_sites(lattice,
-                                                         orig_site, dest_site);
+            const int E1 = ising::calcE_for_two_sites(lattice,
+                                                          orig_site, dest_site);
 
             const int dE = E1 - E0;
 
