@@ -1,5 +1,6 @@
 *.swp
 *.o
+build
 clusterMC_ising_thermo_prop
 clusterMC_ising_vacancies
 localMC_ising_thermo_prop
