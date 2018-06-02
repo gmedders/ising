@@ -11,7 +11,6 @@ list_av_m = []
 S = [random.choice([1, -1]) for k in range(N)]
 M = sum(S)
 for T in list_T:
-    print T
     p  = 1.0 - math.exp(-2.0 / T)
     M_tot = 0.0
     n_flipped_spins = 0
@@ -33,6 +32,7 @@ for T in list_T:
         M_tot += abs(M)
         nsteps += 1
     list_av_m.append(M_tot / float(nsteps) / N)
+    print T, (M_tot / float(nsteps) / N)
 pylab.plot(list_T, list_av_m, 'bo-', clip_on=False)
 pylab.title('%i x %i lattice (periodic boundary conditions)' % (L, L))
 pylab.xlabel('$T$', fontsize=16)

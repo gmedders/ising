@@ -139,6 +139,7 @@ int main(int argc, char** argv)
 
     ising::nodes lattice;
     lattice.init(nx, ny, nz);
+    lattice.report();
 
     // Set up the initial spins
     int initial_spin[lattice.nsites];

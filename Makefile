@@ -1,4 +1,4 @@
-CXX = icpc
+CXX = g++
 CXXFLAGS = -O3 -Wall -std=c++11
 
 all: clusterMC_ising_thermo_prop clusterMC_ising_vacancies \
