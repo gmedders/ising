@@ -11,8 +11,9 @@ int read_command_line_int(const char *argv) {
   std::istringstream iss(argv);
   iss >> val;
   if (!iss || !iss.eof()) {
-    std::cerr << "could not convert '" << argv << "' to int" << std::endl;
-    return EXIT_FAILURE;
+    std::ostringstream os;
+    os << "could not convert '" << argv << "' to int";
+    throw std::invalid_argument(os.str());
   }
   return val;
 }
@@ -24,8 +25,9 @@ double read_command_line_double(const char *argv) {
   std::istringstream iss(argv);
   iss >> val;
   if (!iss || !iss.eof()) {
-    std::cerr << "could not convert '" << argv << "' to double" << std::endl;
-    return EXIT_FAILURE;
+    std::ostringstream os;
+    os << "could not convert '" << argv << "' to double";
+    throw std::invalid_argument(os.str());
   }
   return val;
 }
