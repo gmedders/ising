@@ -6,8 +6,8 @@ Ising model
    filled. Need to determine if it is applicable more generally
    (e.g., with vacancies)
 
-How to use:
-===========
+How to build:
+=============
 
  - git clone https://github.com/gmedders/ising.git
  - cd ising
@@ -17,7 +17,9 @@ How to use:
  - make
 
 To override your default C and C++ compilers, you can use the following instead (for example):
-`cmake -DCMAKE_C_COMPILER=/usr/local/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-7 ..`
+```
+cmake -DCMAKE_C_COMPILER=/usr/local/bin/gcc-7 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-7 ..
+```
 
 Acknowledgments
 ===============

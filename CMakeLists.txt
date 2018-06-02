@@ -14,40 +14,23 @@ endif()
 #-------------------
 set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 include_directories(${COMMON_INCLUDES})
-# include_directories("./tools" "./potentials" ${ARMADILLO_INCLUDE_DIRS})
-
-###
-
-# cmake_minimum_required (VERSION 2.8)
-# project (Tutorial)
-
-# SET(GCC_COVERAGE_COMPILE_FLAGS "-O3 --std=c++11")
-# SET(GCC_COVERAGE_LINK_FLAGS    "-O3 --std=c++11")
-#
-# SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}" )
-# SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}" )
 
 file(GLOB lib_sources ./lib/*.cpp)
 set( lib ${lib_sources})
-
 add_library( lib ${lib})
 
 #-------------------
 # Main source files
 #-------------------
-enable_testing()
-include_directories(${COMMON_INCLUDES})
 
 file(GLOB MAIN_SRC_FILES ${PROJECT_SOURCE_DIR}/src/*.cpp)
 
-# from list of files we'll create tests test_name.cpp -> test_name
-foreach(_test_file ${MAIN_SRC_FILES})
-    get_filename_component(_test_name ${_test_file} NAME_WE)
-    add_executable(${_test_name} ${_test_file})
-    target_link_libraries(${_test_name} lib)
+# Set up each executable target in the src directory
+foreach(_main_file ${MAIN_SRC_FILES})
+    get_filename_component(_main_name ${_main_file} NAME_WE)
+    add_executable(${_main_name} ${_main_file})
+    target_link_libraries(${_main_name} lib)
 endforeach()
-
-
 
 # #-------------------
 # # Test
