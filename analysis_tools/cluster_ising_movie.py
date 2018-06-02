@@ -2,16 +2,18 @@ import random, math, pylab
 
 L = 12
 N = L * L
-nbr = {i : ((i // L) * L + (i + 1) % L, (i + L) % N,
-            (i // L) * L + (i - 1) % L, (i - L) % N)
-                                    for i in range(N)}
+nbr = {
+    i: ((i // L) * L + (i + 1) % L, (i + L) % N, (i // L) * L + (i - 1) % L,
+        (i - L) % N)
+    for i in range(N)
+}
 n_spins_to_flip = N * 10000
 list_T = [1.0 + 0.2 * i for i in range(15)]
 list_av_m = []
 S = [random.choice([1, -1]) for k in range(N)]
 M = sum(S)
 for T in list_T:
-    p  = 1.0 - math.exp(-2.0 / T)
+    p = 1.0 - math.exp(-2.0 / T)
     M_tot = 0.0
     n_flipped_spins = 0
     nsteps = 0
@@ -21,7 +23,8 @@ for T in list_T:
         while Pocket != []:
             j = random.choice(Pocket)
             for l in nbr[j]:
-                if S[l] == S[j] and l not in Cluster and random.uniform(0.0, 1.0) < p:
+                if S[l] == S[j] and l not in Cluster and random.uniform(
+                        0.0, 1.0) < p:
                     Pocket.append(l)
                     Cluster.append(l)
             Pocket.remove(j)
