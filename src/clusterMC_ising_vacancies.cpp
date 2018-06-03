@@ -242,11 +242,8 @@ int main(int argc, char **argv) {
 #endif
 
   lattice.generate_random_spins(generator);
-
-  // Set up random numbers
-  std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
-
-  ising::generated_desired_occupancy(lattice, ndesiredOccupied);
+  const int noccupied =
+      ising::generated_desired_occupancy(lattice, ndesiredOccupied);
 
 #ifdef VERBOSE
 #ifdef ENABLE_MPI
@@ -257,6 +254,7 @@ int main(int argc, char **argv) {
     ising::print_cell(lattice, comment);
   }
 #endif
+
   // Save the initial spins
   int initial_spin[lattice.nsites];
   std::copy(lattice.spin, lattice.spin + lattice.nsites, initial_spin);
@@ -271,16 +269,12 @@ int main(int argc, char **argv) {
 
     std::copy(initial_spin, initial_spin + lattice.nsites, lattice.spin);
 
-
     double my_M_av(0);
     double my_numNeighbor_av(0);
     double my_numVertNeighbor_av(0);
 
     int my_n_av = do_ising(lattice, T, generator, my_M_av, my_numNeighbor_av,
                            my_numVertNeighbor_av);
-
-    // This is checked in do_ising()
-    const int noccupied = ndesiredOccupied;
 
 #ifdef ENABLE_MPI
     double M_av;
