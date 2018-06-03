@@ -246,8 +246,7 @@ int main(int argc, char **argv) {
   // Set up random numbers
   std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
 
-  ising::generated_desired_occupancy(lattice, generator, rand_lattice_site,
-                                     ndesiredOccupied);
+  ising::generated_desired_occupancy(lattice, ndesiredOccupied);
 
 #ifdef VERBOSE
 #ifdef ENABLE_MPI
@@ -271,6 +270,7 @@ int main(int argc, char **argv) {
     double T = T0 + dT * i;
 
     std::copy(initial_spin, initial_spin + lattice.nsites, lattice.spin);
+
 
     double my_M_av(0);
     double my_numNeighbor_av(0);

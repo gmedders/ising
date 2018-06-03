@@ -48,8 +48,7 @@ int do_ising(ising::nodes &lattice, const double T,
   std::uniform_real_distribution<double> rand_01(0.0, 1.0);
 
   // Randomly zero out the spins for half the sites
-  int noccupied = ising::generated_desired_occupancy(
-      lattice, generator, rand_lattice_site, ndesiredOccupied);
+  int noccupied = ising::generated_desired_occupancy(lattice, ndesiredOccupied);
 
 #ifdef VERBOSE
 #ifdef ENABLE_MPI
@@ -81,13 +80,11 @@ int do_ising(ising::nodes &lattice, const double T,
     // If move is allowed
     if (do_move) {
       // Calculate the energy before the move
-      const double E0 =
-          lattice.calcE_for_two_sites(orig_site, dest_site);
+      const double E0 = lattice.calcE_for_two_sites(orig_site, dest_site);
 
       // Create trial move by swapping the spins. Recalc Energy
       ising::swap_spins(lattice.spin, orig_site, dest_site);
-      const double E1 =
-          lattice.calcE_for_two_sites(orig_site, dest_site);
+      const double E1 = lattice.calcE_for_two_sites(orig_site, dest_site);
 
       const double dE = E1 - E0;
 
@@ -294,9 +291,9 @@ int main(int argc, char **argv) {
 
     MPI_Reduce(&my_M_av, &M_av, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0,
                MPI_COMM_WORLD);
-    MPI_Reduce(&my_numNe
-ighbor_av, &numNeighbor_av, 1, MPI_DOUBLE_PRECISION,
-               MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&my_numNe ighbor_av, &numNeighbor_av, 1, MPI_DOUBLE_PRECISION,
+               MPI_SUM, 0, MPI_COMM_WOR
+LD);
     MPI_Reduce(&my_numVertNeighbor_av, &numVertNeighbor_av, 1,
                MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&my_n_av, &n_av, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);

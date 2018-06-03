@@ -18,8 +18,7 @@ void print_cell(ising::nodes &, std::string);
 
 void collect_stats(ising::nodes &, int &, double &, double &, double &);
 
-int generated_desired_occupancy(ising::nodes &, std::default_random_engine &,
-                                std::uniform_int_distribution<int> &, int &);
+int generated_desired_occupancy(ising::nodes &, int &);
 
 } // namespace ising
 #endif // HELPERS_H

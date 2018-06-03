@@ -170,13 +170,9 @@ TEST(helpers, GenerateDesiredOccupancy) {
 
   std::copy(&initial_spin[0], &initial_spin[0] + lattice.nsites, lattice.spin);
 
-  // Set up random numbers
-  std::default_random_engine generator(19103);
-  std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
-
   int ndesiredOccupied(4);
   int noccupied = ising::generated_desired_occupancy(
-      lattice, generator, rand_lattice_site, ndesiredOccupied);
+      lattice, ndesiredOccupied);
 
   EXPECT_EQ(noccupied, ndesiredOccupied);
 }
