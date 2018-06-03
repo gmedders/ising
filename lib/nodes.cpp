@@ -7,8 +7,6 @@
 
 namespace ising {
 
-int pos_mod(int &a, int &b) { return ((a % b + b) % b); }
-
 //----------------------------------------------------------------------------//
 
 nodes::~nodes() {
@@ -19,10 +17,13 @@ nodes::~nodes() {
 }
 
 //----------------------------------------------------------------------------//
+
 void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction) {
   std::unique_ptr<bounds> imaging = std::make_unique<pbc>(my_nx, my_ny, my_nz);
   init(my_nx, my_ny, my_nz, my_kInteraction, std::move(imaging));
 }
+
+//----------------------------------------------------------------------------//
 
 void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction,
                  std::unique_ptr<bounds> imaging) {

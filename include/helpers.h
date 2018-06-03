@@ -1,3 +1,6 @@
+#ifndef HELPERS_H
+#define HELPERS_H
+
 #include <algorithm>
 #include <cstdlib>
 #include <random>
@@ -19,3 +22,4 @@ int generated_desired_occupancy(ising::nodes &, std::default_random_engine &,
                                 std::uniform_int_distribution<int> &, int &);
 
 } // namespace ising
+#endif // HELPERS_H
