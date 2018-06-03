@@ -1,8 +1,5 @@
 #include "nodes.h"
 
-#define PBC true
-//#define NO_PBC true
-
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace ising {
@@ -14,6 +11,12 @@ nodes::~nodes() {
     delete[] frozen;
   if (spin != 0)
     delete[] spin;
+}
+
+//----------------------------------------------------------------------------//
+
+void nodes::init(int my_nx, int my_ny, int my_nz) {
+  nodes::init(my_nx, my_ny, my_nz, 0.0);
 }
 
 //----------------------------------------------------------------------------//
@@ -53,12 +56,6 @@ void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction,
 
   // Determine neighbor connectivity
   determine_connectivity();
-}
-
-//----------------------------------------------------------------------------//
-
-void nodes::init(int my_nx, int my_ny, int my_nz) {
-  nodes::init(my_nx, my_ny, my_nz, 0.0);
 }
 
 //----------------------------------------------------------------------------//

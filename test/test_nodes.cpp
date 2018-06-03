@@ -7,6 +7,56 @@
 #include "nodes.h"
 #include "gtest/gtest.h"
 
+TEST(nodes, AddConnectionOnlyIfSiteIsValid) {
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  ising::nodes lattice;
+  int nx = 2, ny = 2, nz = 2;
+  auto imaging = std::make_unique<ising::no_pbc>(nx, ny, nz);
+  lattice.init(nx, ny, nz, 0.0, std::move(imaging));
+
+  std::vector<int> connections;
+  std::vector<bool> vertical;
+
+  EXPECT_EQ(int(connections.size()), int(connections.size()));
+
+  int prev_size = int(connections.size());
+  lattice.attempt_to_add(connections, vertical, 0, 0, 0, false);
+
+  EXPECT_EQ(int(connections.size()), int(connections.size()));
+  EXPECT_EQ(int(connections.size()), prev_size + 1);
+
+  // In no-PBC, the site (-1, -1, -1) is illegal, so there should be no increase
+  // in the size of connections and vertical
+  prev_size = int(connections.size());
+  lattice.attempt_to_add(connections, vertical, -1, -1, -1, false);
+
+  EXPECT_EQ(int(connections.size()), int(connections.size()));
+  EXPECT_EQ(int(connections.size()), prev_size);
+}
+
+TEST(nodes, ConnectivityPBC) {
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  ising::nodes lattice;
+  int nx = 2, ny = 2, nz = 2;
+  auto imaging = std::make_unique<ising::pbc>(nx, ny, nz);
+  lattice.init(nx, ny, nz, 0.0, std::move(imaging));
+
+  EXPECT_EQ(int(lattice.neighbors.size()), int(lattice.nsites));
+  EXPECT_EQ(int(lattice.neighborVertical.size()), int(lattice.nsites));
+
+  for (auto& neighbor: lattice.neighbors)
+    EXPECT_EQ(int(neighbor.size()), 6);
+
+  for (auto neighborVertical: lattice.neighborVertical){
+    int n_vert(0);
+    for (auto isVerticalNeighbor: neighborVertical) {
+      if (isVerticalNeighbor)
+        ++n_vert;
+    }
+    EXPECT_EQ(n_vert, 2);
+  }
+
+}
 
 TEST(nodes, EnergyForOneSite) {
   // nx = 2, ny = 2, nz = 2, kInteraction = 0
