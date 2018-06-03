@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <string>
 
+#include "helpers.h"
 #include "nodes.h"
 #include "gtest/gtest.h"
 
@@ -21,28 +22,56 @@ TEST(nodes, PosMod) {
   EXPECT_EQ(ising::pos_mod(pos, n_pos), 1);
 }
 
-// TEST(helpers, collectStatsNoVacancy2D) {
-//   // initial_spin:
-//   //  1  1 -1
-//   // -1 -1  1
-//   //  1  1  1
-//   std::vector<int> initial_spin = {1, 1, -1, -1, -1, 1, 1, 1, 1};
-//
-//   // nx = 3, ny = 3, nz = 1, kInteraction = 0
-//   ising::nodes lattice;
-//   lattice.init(3, 3, 1, 0.0);
-//   ASSERT_EQ(int(initial_spin.size()), int(lattice.nsites));
-//
-//   std::copy(&initial_spin[0], &initial_spin[0] + lattice.nsites, lattice.spin);
-//
-//   int n_av(0);
-//   double M_av(0.0);
-//   double numNeighbor_av(0.0);
-//   double numVertNeighbor_av(0.0);
-//   collect_stats(lattice, n_av, M_av, numNeighbor_av, numVertNeighbor_av);
-//
-//   EXPECT_EQ(n_av, 1);
-//   EXPECT_DOUBLE_EQ(numNeighbor_av, 36.0);
-//   EXPECT_DOUBLE_EQ(M_av, 3.0);
-//   EXPECT_DOUBLE_EQ(numVertNeighbor_av, 0.0);
-// }
+TEST(nodes, EnergyChangeOnSpinFlip) {
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  ising::nodes lattice;
+  lattice.init(2, 2, 2, 0.0);
+
+  // initial_spin
+  // level 0:
+  //  1  0
+  // -1 -1
+  // level 1:
+  //  1  0
+  //  1  1
+  std::vector<int> initial_spin = {1, 0, -1, -1, 1, 0, 1, 1};
+  ASSERT_EQ(int(initial_spin.size()), int(lattice.nsites));
+  std::copy(&initial_spin[0], &initial_spin[0] + lattice.nsites, lattice.spin);
+
+  int active_site = 2;
+  double E0 = lattice.calcE_for_one_site(lattice, active_site);
+  EXPECT_DOUBLE_EQ(E0, 2.0);
+
+  // Create trial move by swapping the spins. Recalc Energy
+  lattice.spin[active_site] *= -1;
+  double E1 = lattice.calcE_for_one_site(lattice, active_site);
+  EXPECT_DOUBLE_EQ(E1, -2.0);
+}
+
+TEST(nodes, EnergyChangeOnMove) {
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  ising::nodes lattice;
+  lattice.init(2, 2, 2, 0.0);
+
+  // initial_spin
+  // level 0:
+  //  1  0
+  // -1 -1
+  // level 1:
+  //  1  0
+  //  1  1
+  std::vector<int> initial_spin = {1, 0, -1, -1, 1, 0, 1, 1};
+  ASSERT_EQ(int(initial_spin.size()), int(lattice.nsites));
+  std::copy(&initial_spin[0], &initial_spin[0] + lattice.nsites, lattice.spin);
+
+  // Calculate the energy before the move
+  int orig_site = 2;
+  int dest_site = 4;
+  double E0 = lattice.calcE_for_two_sites(lattice, orig_site, dest_site);
+  EXPECT_DOUBLE_EQ(E0, -2.0);
+
+  // Create trial move by swapping the spins. Recalc Energy
+  ising::swap_spins(lattice.spin, orig_site, dest_site);
+  double E1 = lattice.calcE_for_two_sites(lattice, orig_site, dest_site);
+  EXPECT_DOUBLE_EQ(E1, 2.0);
+}
