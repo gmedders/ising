@@ -5,19 +5,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace {
-
-//----------------------------------------------------------------------------//
+namespace ising {
 
 int pos_mod(int &a, int &b) { return ((a % b + b) % b); }
-
-//----------------------------------------------------------------------------//
-
-} // namespace
-
-////////////////////////////////////////////////////////////////////////////////
-
-namespace ising {
 
 //----------------------------------------------------------------------------//
 
@@ -91,7 +81,8 @@ void nodes::report() {
 
 int nodes::find_site_index(int ix, int iy, int iz) {
 #ifdef PBC
-  return pos_mod(iz, nz) * ny * nx + pos_mod(iy, ny) * nx + pos_mod(ix, nx);
+  return pos_mod(iz, nz) * ny * nx + pos_mod(iy, ny) * nx +
+         pos_mod(ix, nx);
 #elif defined(NO_PBC)
   // within the system (that is not replicated in x,y,z)
   if (ix >= 0 && ix < nx && iy >= 0 && iy < ny && iz >= 0 && iz < nz)

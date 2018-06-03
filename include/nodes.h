@@ -7,6 +7,8 @@
 
 namespace ising {
 
+  int pos_mod(int &a, int &b);
+
 struct nodes {
   inline nodes();
   ~nodes();
