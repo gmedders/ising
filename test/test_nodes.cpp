@@ -22,6 +22,27 @@ TEST(nodes, PosMod) {
   EXPECT_EQ(ising::pos_mod(pos, n_pos), 1);
 }
 
+TEST(nodes, BoundsPBC) {
+  ising::pbc imaging(2, 2, 2);
+  EXPECT_EQ(imaging.find_site_index(0, 0, 0), 0);
+  EXPECT_EQ(imaging.find_site_index(1, 0, 0), 1);
+  EXPECT_EQ(imaging.find_site_index(0, 1, 0), 2);
+  EXPECT_EQ(imaging.find_site_index(0, 0, 1), 4);
+  EXPECT_EQ(imaging.find_site_index(1, 1, 1), 7);
+}
+
+TEST(nodes, FindSiteIndexFullPBC) {
+  ising::nodes lattice;
+  int nx = 2, ny = 2, nz = 2;
+  auto imaging = std::make_unique<ising::pbc>(nx, ny, nz);
+  lattice.init(nx, ny, nz, 0.0, std::move(imaging));
+  EXPECT_EQ(lattice.find_site_index(0, 0, 0), 0);
+  EXPECT_EQ(lattice.find_site_index(1, 0, 0), 1);
+  EXPECT_EQ(lattice.find_site_index(0, 1, 0), 2);
+  EXPECT_EQ(lattice.find_site_index(0, 0, 1), 4);
+  EXPECT_EQ(lattice.find_site_index(1, 1, 1), 7);
+}
+
 TEST(nodes, EnergyForOneSite) {
   // nx = 2, ny = 2, nz = 2, kInteraction = 0
   ising::nodes lattice;

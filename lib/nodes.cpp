@@ -19,8 +19,12 @@ nodes::~nodes() {
 }
 
 //----------------------------------------------------------------------------//
-
 void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction) {
+  std::unique_ptr<bounds> imaging = std::make_unique<pbc>(my_nx, my_ny, my_nz);
+  init(my_nx, my_ny, my_nz, my_kInteraction, std::move(imaging));
+}
+
+void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction, std::unique_ptr<bounds> imaging) {
   nx = my_nx;
   ny = my_ny;
   nz = my_nz;
@@ -42,6 +46,8 @@ void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction) {
 
   spin = new int[nsites];
   std::fill(spin, spin + nsites, 0); // Initialize to unoccupied
+
+  Handler = std::move(imaging);
 
   // Determine neighbor connectivity
   determine_connectivity();
@@ -80,20 +86,21 @@ void nodes::report() {
 //----------------------------------------------------------------------------//
 
 int nodes::find_site_index(int ix, int iy, int iz) {
-#ifdef PBC
-  return pos_mod(iz, nz) * ny * nx + pos_mod(iy, ny) * nx + pos_mod(ix, nx);
-#elif defined(NO_PBC)
-  // within the system (that is not replicated in x,y,z)
-  if (ix >= 0 && ix < nx && iy >= 0 && iy < ny && iz >= 0 && iz < nz)
-    return iz * ny * nx + iy * nx + ix;
-  else
-    return -1;
-#else
-  if (iz >= 0 && iz < nz) // within the system (that is not replicated in z)
-    return iz * ny * nx + pos_mod(iy, ny) * nx + pos_mod(ix, nx);
-  else
-    return -1;
-#endif
+  return Handler->find_site_index(ix, iy, iz);
+// #ifdef PBC
+//   return pos_mod(iz, nz) * ny * nx + pos_mod(iy, ny) * nx + pos_mod(ix, nx);
+// #elif defined(NO_PBC)
+//   // within the system (that is not replicated in x,y,z)
+//   if (ix >= 0 && ix < nx && iy >= 0 && iy < ny && iz >= 0 && iz < nz)
+//     return iz * ny * nx + iy * nx + ix;
+//   else
+//     return -1;
+// #else
+//   if (iz >= 0 && iz < nz) // within the system (that is not replicated in z)
+//     return iz * ny * nx + pos_mod(iy, ny) * nx + pos_mod(ix, nx);
+//   else
+//     return -1;
+// #endif
 }
 
 //----------------------------------------------------------------------------//
