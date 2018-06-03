@@ -70,6 +70,15 @@ void nodes::generate_random_spins(std::default_random_engine &generator) {
   }
 }
 
+
+int nodes::calculate_noccupied() {
+  int noccupied = 0;
+  for (int i = 0; i < nsites; ++i)
+    if (spin[i] != 0)
+      ++noccupied;
+  return noccupied;
+}
+
 //----------------------------------------------------------------------------//
 
 void nodes::report() {

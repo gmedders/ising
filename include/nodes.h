@@ -19,6 +19,7 @@ struct nodes {
   void init(int, int, int, double);
   void init(int, int, int);
   void report();
+  int calculate_noccupied();
   void determine_connectivity();
   int find_site_index(int, int, int);
   void attempt_to_add(std::vector<int> &, std::vector<bool> &, int, int, int,

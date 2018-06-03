@@ -18,8 +18,6 @@
 #include "helpers.h"
 #include "nodes.h"
 
-#define FIXED_NUMBER yes
-#define CONDENSED yes
 #define FROZEN yes
 
 #define VERBOSE yes
@@ -45,23 +43,10 @@ int do_ising(ising::nodes &lattice, const double T,
   double beta = 1.0 / T;
   const double pCluster = 1.0 - std::exp(-2.0 * beta);
 
-  // Set up random numbers
   std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
   std::uniform_real_distribution<double> rand_01(0.0, 1.0);
 
-  int noccupied = ising::generated_desired_occupancy(
-      lattice, generator, rand_lattice_site, ndesiredOccupied);
-
-#ifdef VERBOSE
-#ifdef ENABLE_MPI
-  if (my_rank == 0)
-#endif
-  {
-    std::string comment("Initial configuration, T = ");
-    comment += std::to_string(T);
-    ising::print_cell(lattice, comment);
-  }
-#endif
+  int noccupied = lattice.calculate_noccupied();
 
   // Required number of attempted moves to grow with number of lattice sites
   for (size_t imove = 0; imove < nmove * lattice.nsites; ++imove) {
@@ -82,13 +67,11 @@ int do_ising(ising::nodes &lattice, const double T,
     // If move is allowed
     if (do_move) {
       // Calculate the energy before the move
-      const double E0 =
-          lattice.calcE_for_two_sites(orig_site, dest_site);
+      const double E0 = lattice.calcE_for_two_sites(orig_site, dest_site);
 
       // Create trial move by swapping the spins. Recalc Energy
       ising::swap_spins(lattice.spin, orig_site, dest_site);
-      const double E1 =
-          lattice.calcE_for_two_sites(orig_site, dest_site);
+      const double E1 = lattice.calcE_for_two_sites(orig_site, dest_site);
 
       const double dE = E1 - E0;
 
@@ -184,19 +167,25 @@ int do_ising(ising::nodes &lattice, const double T,
 int main(int argc, char **argv) {
   if (argc != 6) {
     std::cerr << "usage: clusterMC_ising_vacancies "
-#ifdef FIXED_NUMBER
-              << "nx ny nz kInteraction #_occupied > a.dat"
-#else
-              << "nx ny nz kInteraction \%_occupied > a.dat"
-#endif
-              << std::endl;
+              << "nx ny nz kInteraction occupancy_ratio > a.dat" << std::endl;
     return EXIT_FAILURE;
   }
 
   // Define lattice size and initialize it
-  int nx = ising::read_command_line_int(argv[1]);
-  int ny = ising::read_command_line_int(argv[2]);
-  int nz = ising::read_command_line_int(argv[3]);
+  int nx(0), ny(0), nz(0);
+  double kInteraction(0.0), occupancy(-1.0);
+  try {
+    nx = ising::read_command_line_int(argv[1]);
+    ny = ising::read_command_line_int(argv[2]);
+    nz = ising::read_command_line_int(argv[3]);
+    kInteraction = ising::read_command_line_double(argv[4]);
+    occupancy = ising::read_command_line_double(argv[5]);
+    if (occupancy > 1.0)
+      throw std::invalid_argument("Occupancy ratio must be <= 1.0");
+  } catch (const std::exception &e) {
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
 
 #ifdef ENABLE_MPI
   MPI_Init(&argc, &argv);
@@ -205,11 +194,7 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
 
   nmove /= my_size;
-#endif
 
-  double kInteraction = ising::read_command_line_double(argv[4]);
-
-#ifdef ENABLE_MPI
   if (my_rank == 0)
 #endif
     // Now have all information needed to set up the lattice sites
@@ -221,47 +206,25 @@ int main(int argc, char **argv) {
   lattice.init(nx, ny, nz, kInteraction);
 
   // Determine how many sites are to be occupied
-  {
-    int tmp = ising::read_command_line_int(argv[5]);
-    // If passed a negative number, make a fully occupied lattice
-    if (tmp < 0) {
-      ndesiredOccupied = lattice.nsites;
-    } else {
-#ifdef FIXED_NUMBER
-      ndesiredOccupied = tmp;
-#else
-      ndesiredOccupied = (int)(lattice.nsites / tmp);
-#endif
-    }
-    if (ndesiredOccupied > lattice.nsites) {
-      std::cerr << "DYING!!! Asked for too many sites for this lattice\n"
-                << "# Requested " << ndesiredOccupied << " sites to be"
-                << " occupied out of " << lattice.nsites << " total sites"
-                << std::endl;
-      return EXIT_FAILURE;
-    }
-#ifdef ENABLE_MPI
-    if (my_rank == 0)
-#endif
-      std::cout << "# Requesting " << ndesiredOccupied << " sites to be"
-                << " occupied out of " << lattice.nsites << " total sites"
-                << std::endl;
+  // If passed a negative number, make a fully occupied lattice
+  if (occupancy < 0) {
+    ndesiredOccupied = lattice.nsites;
+  } else {
+    ndesiredOccupied = (int)(lattice.nsites * occupancy);
   }
+#ifdef ENABLE_MPI
+  if (my_rank == 0)
+#endif
+    std::cout << "# Requesting " << ndesiredOccupied << " sites to be"
+              << " occupied out of " << lattice.nsites << " total sites"
+              << std::endl;
 
 #ifdef ENABLE_MPI
   if (my_rank == 0)
 #endif
     lattice.report();
 
-  // Set up the initial spins
-  int initial_spin[lattice.nsites];
-  std::fill(initial_spin, initial_spin + lattice.nsites, 0);
-
-#ifdef ENABLE_MPI
   std::default_random_engine generator(19103 + 11 * my_rank);
-#else
-  std::default_random_engine generator(19103);
-#endif
 
 #ifdef FROZEN
 #ifdef ENABLE_MPI
@@ -272,34 +235,32 @@ int main(int argc, char **argv) {
   for (int iz = 0; iz < 1; ++iz) {
     for (int iy = 0; iy < lattice.ny; ++iy) {
       for (int ix = 0; ix < lattice.nx; ++ix) {
-        lattice.
-frozen[lattice.find_site_index(ix, iy, iz)] = true;
+        lattice.frozen[lattice.find_site_index(ix, iy, iz)] = true;
       }
     }
   }
 #endif
 
-#ifdef CONDENSED
-  int num_inited_sites(0);
-  for (int iz = 0; iz < lattice.nz; ++iz) {
-    for (int iy = 0; iy < lattice.ny; ++iy) {
-      for (int ix = 0; ix < lattice.nx; ++ix) {
+  lattice.generate_random_spins(generator);
 
-        if (num_inited_sites < ndesiredOccupied) {
-          initial_spin[lattice.find_site_index(ix, iy, iz)] = 1;
-          ++num_inited_sites;
-        }
-      }
-    }
-  }
-#else
-  std::uniform_int_distribution<int> distribution(0, 1);
-  for (int i = 0; i < lattice.nsites; ++i)
-    if (distribution(generator) == 0)
-      initial_spin[i] = -1;
-    else
-      initial_spin[i] = 1;
+  // Set up random numbers
+  std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
+
+  ising::generated_desired_occupancy(lattice, generator, rand_lattice_site,
+                                     ndesiredOccupied);
+
+#ifdef VERBOSE
+#ifdef ENABLE_MPI
+  if (my_rank == 0)
 #endif
+  {
+    std::string comment("Initial configuration");
+    ising::print_cell(lattice, comment);
+  }
+#endif
+  // Save the initial spins
+  int initial_spin[lattice.nsites];
+  std::copy(lattice.spin, lattice.spin + lattice.nsites, initial_spin);
 
   // Define the initial temperature and increments
   double T0 = 1.0e-16;
