@@ -81,8 +81,7 @@ void nodes::report() {
 
 int nodes::find_site_index(int ix, int iy, int iz) {
 #ifdef PBC
-  return pos_mod(iz, nz) * ny * nx + pos_mod(iy, ny) * nx +
-         pos_mod(ix, nx);
+  return pos_mod(iz, nz) * ny * nx + pos_mod(iy, ny) * nx + pos_mod(ix, nx);
 #elif defined(NO_PBC)
   // within the system (that is not replicated in x,y,z)
   if (ix >= 0 && ix < nx && iy >= 0 && iy < ny && iz >= 0 && iz < nz)
@@ -179,11 +178,10 @@ void nodes::determine_connectivity() {
 
 //----------------------------------------------------------------------------//
 
-double nodes::calcE_for_one_site(ising::nodes &lattice, int &site) {
-  int *spin = lattice.spin;
+double nodes::calcE_for_one_site(int &site) {
   double E(0);
-  for (size_t ibr = 0; ibr < lattice.neighbors[site].size(); ++ibr) {
-    int nbr = lattice.neighbors[site][ibr];
+  for (size_t ibr = 0; ibr < neighbors[site].size(); ++ibr) {
+    int nbr = neighbors[site][ibr];
     double ss = spin[site] * spin[nbr];
     E -= (ss + kInteraction * ss * ss);
   }
@@ -192,10 +190,9 @@ double nodes::calcE_for_one_site(ising::nodes &lattice, int &site) {
 
 //----------------------------------------------------------------------------//
 
-double nodes::calcE_for_two_sites(ising::nodes &lattice, int &site_a,
-                                  int &site_b) {
-  double E0_a = calcE_for_one_site(lattice, site_a);
-  double E0_b = calcE_for_one_site(lattice, site_b);
+double nodes::calcE_for_two_sites(int &site_a, int &site_b) {
+  double E0_a = calcE_for_one_site(site_a);
+  double E0_b = calcE_for_one_site(site_b);
 
   return E0_a + E0_b;
 }

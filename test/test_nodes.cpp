@@ -39,12 +39,12 @@ TEST(nodes, EnergyChangeOnSpinFlip) {
   std::copy(&initial_spin[0], &initial_spin[0] + lattice.nsites, lattice.spin);
 
   int active_site = 2;
-  double E0 = lattice.calcE_for_one_site(lattice, active_site);
+  double E0 = lattice.calcE_for_one_site(active_site);
   EXPECT_DOUBLE_EQ(E0, 2.0);
 
   // Create trial move by swapping the spins. Recalc Energy
   lattice.spin[active_site] *= -1;
-  double E1 = lattice.calcE_for_one_site(lattice, active_site);
+  double E1 = lattice.calcE_for_one_site(active_site);
   EXPECT_DOUBLE_EQ(E1, -2.0);
 }
 
@@ -67,11 +67,11 @@ TEST(nodes, EnergyChangeOnMove) {
   // Calculate the energy before the move
   int orig_site = 2;
   int dest_site = 4;
-  double E0 = lattice.calcE_for_two_sites(lattice, orig_site, dest_site);
+  double E0 = lattice.calcE_for_two_sites(orig_site, dest_site);
   EXPECT_DOUBLE_EQ(E0, -2.0);
 
   // Create trial move by swapping the spins. Recalc Energy
   ising::swap_spins(lattice.spin, orig_site, dest_site);
-  double E1 = lattice.calcE_for_two_sites(lattice, orig_site, dest_site);
+  double E1 = lattice.calcE_for_two_sites(orig_site, dest_site);
   EXPECT_DOUBLE_EQ(E1, 2.0);
 }

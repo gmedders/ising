@@ -7,7 +7,7 @@
 
 namespace ising {
 
-  int pos_mod(int &a, int &b);
+int pos_mod(int &a, int &b);
 
 struct nodes {
   inline nodes();
@@ -21,8 +21,8 @@ struct nodes {
   void attempt_to_add(std::vector<int> &, std::vector<bool> &, int, int, int,
                       bool);
 
-  double calcE_for_one_site(ising::nodes &, int &);
-  double calcE_for_two_sites(ising::nodes &, int &, int &);
+  double calcE_for_one_site(int &);
+  double calcE_for_two_sites(int &, int &);
 
   int nx;
   int ny;

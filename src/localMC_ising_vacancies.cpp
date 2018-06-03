@@ -82,12 +82,12 @@ int do_ising(ising::nodes &lattice, const double T,
     if (do_move) {
       // Calculate the energy before the move
       const double E0 =
-          lattice.calcE_for_two_sites(lattice, orig_site, dest_site);
+          lattice.calcE_for_two_sites(orig_site, dest_site);
 
       // Create trial move by swapping the spins. Recalc Energy
       ising::swap_spins(lattice.spin, orig_site, dest_site);
       const double E1 =
-          lattice.calcE_for_two_sites(lattice, orig_site, dest_site);
+          lattice.calcE_for_two_sites(orig_site, dest_site);
 
       const double dE = E1 - E0;
 
@@ -106,11 +106,11 @@ int do_ising(ising::nodes &lattice, const double T,
       int active_site = rand_lattice_site(generator);
 
       // Calculate energy before the spin flip
-      double E0 = lattice.calcE_for_one_site(lattice, active_site);
+      double E0 = lattice.calcE_for_one_site(active_site);
 
       // Create trial move by swapping the spins. Recalc Energy
       lattice.spin[active_site] *= -1;
-      double E1 = lattice.calcE_for_one_site(lattice, active_site);
+      double E1 = lattice.calcE_for_one_site(active_site);
 
       const double dE = E1 - E0;
 
