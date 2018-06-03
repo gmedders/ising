@@ -3,6 +3,7 @@
 #include <cstdlib>
 
 #include <cstring>
+#include <exception>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -11,8 +12,8 @@
 #include <algorithm>
 #include <random>
 
-#include "nodes.h"
 #include "helpers.h"
+#include "nodes.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +25,7 @@ size_t nsample(10000);
 
 //----------------------------------------------------------------------------//
 
-void do_ising(ising::nodes &lattice, int *spin, const double T,
+void do_ising(ising::nodes &lattice, const double T,
               std::default_random_engine &generator) {
   int nsteps(0);
   int M_av(0);
@@ -34,11 +35,6 @@ void do_ising(ising::nodes &lattice, int *spin, const double T,
 
   // Cluster expansion probability for a 2D ising model with all sites filled
   const double p = 1.0 - std::exp(-2.0 * beta);
-
-  // Initial magnetization
-  int M(0);
-  for (int i = 0; i < lattice.nsites; ++i)
-    M += spin[i];
 
   // Set up random numbers
   std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
@@ -78,7 +74,7 @@ void do_ising(ising::nodes &lattice, int *spin, const double T,
         // If the active site and neighbor have the same spin,
         // && current neighbor has not already been placed in cluster
         // && detailed balance is satisified ( rand < p )
-        if ((spin[active_site] == spin[nbr]) &&
+        if ((lattice.spin[active_site] == lattice.spin[nbr]) &&
             (std::find(cluster.begin(), cluster.end(), nbr) == cluster.end()) &&
             (rand_01(generator) <
              p)) { // Then add the neighbor to the cluster and pocket
@@ -91,27 +87,14 @@ void do_ising(ising::nodes &lattice, int *spin, const double T,
 
     // Now, flip the spins of the entire cluster
     for (size_t i = 0; i < cluster.size(); ++i)
-      spin[cluster[i]] *= -1;
-
-#if 0
-	std::cout << " <<<<<<< step: " << nsteps << " >>>>>>>" << std::endl;
-	for(int i = 0; i < lattice.nx; ++i){
-	    for(int j = 0; j < lattice.ny; ++j){
-		if(spin[i*lattice.ny + j] < 0)
-		    std::cout << std::setw(2) << '-';
-		else
-		    std::cout << std::setw(2) << '+';
-	    }
-	    std::cout << std::endl;
-	}
-#endif
+      lattice.spin[cluster[i]] *= -1;
 
     n_flipped_spins += cluster.size();
 
     // Initial magnetization
     int M(0);
     for (int i = 0; i < lattice.nsites; ++i)
-      M += spin[i];
+      M += lattice.spin[i];
 
     M_av += std::abs(M);
     ++nsteps;
@@ -140,9 +123,15 @@ int main(int argc, char **argv) {
   }
 
   // Define lattice size and initialize it
-  int nx = ising::read_command_line_int(argv[1]);
-  int ny = ising::read_command_line_int(argv[2]);
-  int nz = ising::read_command_line_int(argv[3]);
+  int nx(0), ny(0), nz(0);
+  try {
+    nx = ising::read_command_line_int(argv[1]);
+    ny = ising::read_command_line_int(argv[2]);
+    nz = ising::read_command_line_int(argv[3]);
+  } catch (const std::exception& e){
+    std::cerr << e.what() << std::endl;
+    return EXIT_FAILURE;
+  }
 
   std::cout << "# clusterMC_ising_thermo_prop.cpp\n"
             << "# Initializing a " << nx << " x " << ny << " x " << nz
@@ -154,7 +143,7 @@ int main(int argc, char **argv) {
   std::default_random_engine generator;
   lattice.generate_random_spins(generator);
 
-  // Set up the initial spins
+  // Save the initial spins
   int initial_spin[lattice.nsites];
   std::copy(lattice.spin, lattice.spin + lattice.nsites, initial_spin);
 
@@ -163,12 +152,10 @@ int main(int argc, char **argv) {
   double dT = 0.2;
   const size_t nT = 32;
 
-  int spin[lattice.nsites];
-  std::copy(initial_spin, initial_spin + lattice.nsites, spin);
-
   for (size_t i = 0; i < nT; ++i) {
     double T = T0 + dT * i;
 
-    do_ising(lattice, spin, T, generator);
+    std::copy(initial_spin, initial_spin + lattice.nsites, lattice.spin);
+    do_ising(lattice, T, generator);
   }
 }
