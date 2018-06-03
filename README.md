@@ -1,10 +1,11 @@
+[![Build Status](https://travis-ci.org/gmedders/ising.svg?branch=master)](https://travis-ci.org/gmedders/ising)
+
 Ising model
 ===========
 
- - Currently implementing the [cluster Monte Carlo algorithm by Wolff](http://journals.aps.org/prl/abstract/10.1103/PhysRevLett.62.361). The acceptance
-   probability for cluster expansion is valid for the 2D model with all sites
-   filled. Need to determine if it is applicable more generally
-   (e.g., with vacancies)
+ - This project contains a brute-force Monte Carlo approach to obtaining thermodynamic
+ properties of the Ising model, as well as the
+ [cluster Monte Carlo algorithm by Wolff](http://journals.aps.org/prl/abstract/10.1103/PhysRevLett.62.361).
 
 How to build:
 =============
