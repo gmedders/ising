@@ -2,17 +2,18 @@ import random, math, pylab
 
 L = 12
 N = L * L
-nbr = {i : ((i // L) * L + (i + 1) % L, (i + L) % N,
-            (i // L) * L + (i - 1) % L, (i - L) % N)
-                                    for i in range(N)}
+nbr = {
+    i: ((i // L) * L + (i + 1) % L, (i + L) % N, (i // L) * L + (i - 1) % L,
+        (i - L) % N)
+    for i in range(N)
+}
 n_spins_to_flip = N * 10000
 list_T = [1.0 + 0.2 * i for i in range(15)]
 list_av_m = []
 S = [random.choice([1, -1]) for k in range(N)]
 M = sum(S)
 for T in list_T:
-    print T
-    p  = 1.0 - math.exp(-2.0 / T)
+    p = 1.0 - math.exp(-2.0 / T)
     M_tot = 0.0
     n_flipped_spins = 0
     nsteps = 0
@@ -22,7 +23,8 @@ for T in list_T:
         while Pocket != []:
             j = random.choice(Pocket)
             for l in nbr[j]:
-                if S[l] == S[j] and l not in Cluster and random.uniform(0.0, 1.0) < p:
+                if S[l] == S[j] and l not in Cluster and random.uniform(
+                        0.0, 1.0) < p:
                     Pocket.append(l)
                     Cluster.append(l)
             Pocket.remove(j)
@@ -33,6 +35,7 @@ for T in list_T:
         M_tot += abs(M)
         nsteps += 1
     list_av_m.append(M_tot / float(nsteps) / N)
+    print T, (M_tot / float(nsteps) / N)
 pylab.plot(list_T, list_av_m, 'bo-', clip_on=False)
 pylab.title('%i x %i lattice (periodic boundary conditions)' % (L, L))
 pylab.xlabel('$T$', fontsize=16)
