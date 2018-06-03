@@ -60,6 +60,18 @@ void nodes::init(int my_nx, int my_ny, int my_nz, double my_kInteraction,
 
 //----------------------------------------------------------------------------//
 
+void nodes::generate_random_spins(std::default_random_engine &generator) {
+  std::uniform_int_distribution<int> distribution(0, 1);
+  for (int i = 0; i < nsites; ++i) {
+    if (distribution(generator) == 0)
+      spin[i] = -1;
+    else
+      spin[i] = 1;
+  }
+}
+
+//----------------------------------------------------------------------------//
+
 void nodes::report() {
   Handler->report();
   if (kInteraction == 0) {

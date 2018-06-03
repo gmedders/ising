@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include <random>
 #include <vector>
 
 #include "imaging.h"
@@ -22,6 +23,8 @@ struct nodes {
   int find_site_index(int, int, int);
   void attempt_to_add(std::vector<int> &, std::vector<bool> &, int, int, int,
                       bool);
+
+  void generate_random_spins(std::default_random_engine& generator);
 
   double calcE_for_one_site(int &);
   double calcE_for_two_sites(int &, int &);

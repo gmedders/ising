@@ -12,6 +12,7 @@
 #include <random>
 
 #include "nodes.h"
+#include "helpers.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -139,33 +140,9 @@ int main(int argc, char **argv) {
   }
 
   // Define lattice size and initialize it
-  int nx;
-  {
-    std::istringstream iss(argv[1]);
-    iss >> nx;
-    if (!iss || !iss.eof()) {
-      std::cerr << "could not convert '" << argv[1] << "' to int" << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-  int ny;
-  {
-    std::istringstream iss(argv[2]);
-    iss >> ny;
-    if (!iss || !iss.eof()) {
-      std::cerr << "could not convert '" << argv[2] << "' to int" << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
-  int nz;
-  {
-    std::istringstream iss(argv[3]);
-    iss >> nz;
-    if (!iss || !iss.eof()) {
-      std::cerr << "could not convert '" << argv[3] << "' to int" << std::endl;
-      return EXIT_FAILURE;
-    }
-  }
+  int nx = ising::read_command_line_int(argv[1]);
+  int ny = ising::read_command_line_int(argv[2]);
+  int nz = ising::read_command_line_int(argv[3]);
 
   std::cout << "# clusterMC_ising_thermo_prop.cpp\n"
             << "# Initializing a " << nx << " x " << ny << " x " << nz
@@ -174,20 +151,12 @@ int main(int argc, char **argv) {
   ising::nodes lattice;
   lattice.init(nx, ny, nz);
 
+  std::default_random_engine generator;
+  lattice.generate_random_spins(generator);
+
   // Set up the initial spins
   int initial_spin[lattice.nsites];
-
-  std::default_random_engine generator;
-  std::uniform_int_distribution<int> distribution(0, 1);
-  for (int i = 0; i < lattice.nsites; ++i) {
-    if (distribution(generator) == 0)
-      initial_spin[i] = -1;
-    else
-      initial_spin[i] = 1;
-  }
-  int mi = 0;
-  for (int i = 0; i < lattice.nsites; ++i)
-    mi += initial_spin[i];
+  std::copy(lattice.spin, lattice.spin + lattice.nsites, initial_spin);
 
   // Define the initial temperature and increments
   double T0 = 1.00;
