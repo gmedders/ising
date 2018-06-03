@@ -35,7 +35,6 @@ struct nodes {
 
   std::vector<std::vector<int>> neighbors;
   std::vector<std::vector<bool>> neighborVertical;
-  //    std::vector< std::vector<int> > diagNeighbors;
 };
 
 inline nodes::nodes()

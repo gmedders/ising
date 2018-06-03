@@ -138,39 +138,6 @@ void nodes::determine_connectivity() {
           neighbors.push_back(connections);
           neighborVertical.push_back(vertical);
         }
-
-#if 0
-                // Also construct list including NN and diagonal neighbors
-                {
-		    std::vector<int> connections;
-
-		    // +/- x
-                    for(int dx = -1; dx < 2; ++dx){
-                    for(int dy = -1; dy < 2; ++dy){
-                        // For 2D lattice, don't add +/- z
-                        if(nz > 1){
-                            for(int dz = -1; dz < 2; ++dz){
-                                if(!(dx == 0 && dy == 0 && dz == 0)){
-                                    attempt_to_add(connections, ix + dx,
-                                                                iy + dy,
-                                                                iz + dz);
-                                }
-                            }
-                        }else{
-                            int dz = 0;
-                            if(!(dx == 0 && dy == 0 && dz == 0)){
-                                attempt_to_add(connections, ix + dx,
-                                                            iy + dy,
-                                                            iz + dz);
-                            }
-                        }
-
-		    }
-                    }
-
-		    diagNeighbors.push_back(connections);
-                }
-#endif
       }
     }
   }
