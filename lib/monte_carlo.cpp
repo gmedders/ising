@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ostringstream>
 #include <random>
 
 #include "helpers.h"
@@ -13,21 +14,19 @@ namespace ising {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class action {
-  // std::shared_ptr<ising::nodes> lattice;
-  // action(std::shared_ptr<ising::nodes> the_lattice) : lattice(the_lattice){};
-  std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
+class mc_move {
   std::uniform_real_distribution<double> rand_01(0.0, 1.0);
 };
 
 //----------------------------------------------------------------------------//
 
-class cluster_step : public action {
+class cluster_mc_spin_flip : public mc_move {
 
   double pCluster;
   cluster_step(double T) : pCluster(1.0 - std::exp(-2.0 / T)){};
 
-  void step(ising::nodes &lattice, std::default_random_engine &generator) {
+  void step(ising::nodes &lattice, std::default_random_engine &generator,
+            std::uniform_int_distribution<int> &rand_lattice_site) {
     const int n_spins_to_flip(lattice.nsites);
     int n_flipped_spins(0);
     // Sample until we have flipped the required number of spins
@@ -92,12 +91,13 @@ class cluster_step : public action {
 
 //----------------------------------------------------------------------------//
 
-class particle_swap : public action {
+class particle_swap : public mc_move {
 
   double beta;
   particle_swap(double T) : beta(1.0 / T){};
 
-  void step(ising::nodes &lattice, std::default_random_engine &generator) {
+  void step(ising::nodes &lattice, std::default_random_engine &generator,
+            std::uniform_int_distribution<int> &rand_lattice_site) {
     bool do_swap = true;
     // For swap, select two random sites (orig, dest) of different spin
     int orig_site = rand_lattice_site(generator);
@@ -144,22 +144,43 @@ struct monte_carlo {
   std::default_random_engine generator;
   std::shared_ptr<ising::nodes> lattice;
 
-  std::vector<std::unique_ptr<action>> actions;
+  std::vector<std::unique_ptr<mc_move>> mc_moves;
 
-  int do_n_steps(int steps, const double T) {
+  void add_mc_move(std::string &mc_move_name, const double T) {
+
+    if (mc_move_name == std::string("cluster_mc_spin_flip")) {
+      std::unique_ptr<mc_move> act = std::make_unique<cluster_mc_spin_flip>(T);
+      mc_moves.push_back(std::mc_move(act));
+
+    } else if (mc_move_name == std::string("particle_swap")) {
+      std::unique_ptr<mc_move> act = std::make_unique<particle_swap>(T);
+      mc_moves.push_back(std::mc_move(act));
+
+      // } else if (mc_move_name == std::string("local_mc_spin_flip"))
+
+    } else {
+      std::ostringstream os;
+      os << "No Monte Carlo mc_move '" << mc_move_name << "' is available";
+      throw std::invalid_argument(os.str());
+    }
+  }
+
+  int do_n_steps(int steps) {
     // (Re-)initialize the statistics
     int n_av(0);
     M_av = 0;
     numNeighbor_av = 0;
     numVertNeighbor_av = 0;
 
-    int noccupied = lattice.calculate_noccupied();
+    int noccupied = lattice->calculate_noccupied();
+    std::uniform_int_distribution<int> rand_lattice_site(0,
+                                                         lattice->nsites - 1);
 
     // Perform the requested number of steps
     for (size_t istep = 0; istep < steps; ++istep) {
 
-      for (auto &mc_move : actions) {
-        mc_move->step(lattice, generator);
+      for (auto &this_mc_move : mc_moves) {
+        this_mc_move->step(lattice, generator, rand_lattice_site);
       };
 
       ising::collect_stats(lattice, n_av, M_av, numNeighbor_av,
