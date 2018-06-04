@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
   nsteps /= my_size;
 #endif
 
-  auto lattice = std::shared_ptr<ising::nodes>();
+  auto lattice = std::make_shared<ising::nodes>();
   lattice->init(nx, ny, nz, kInteraction);
 
   // Determine how many sites are to be occupied
