@@ -53,10 +53,10 @@ TEST(nodes, MonteCarloAddParticleSwapMove) {
             lattice->spin);
 
   int seed(19104);
-  ising::monte_carlo mc_simulation(seed, lattice);
-
   const double T = 10000.0;
-  mc_simulation.add_mc_move("particle_swap", T);
+  ising::monte_carlo mc_simulation(seed, lattice, T);
+
+  mc_simulation.add_mc_move("particle_swap");
 
   mc_simulation.do_n_steps(1);
 
@@ -117,10 +117,10 @@ TEST(nodes, MonteCarloAddSpinFlipMove) {
             lattice->spin);
 
   int seed(19104);
-  ising::monte_carlo mc_simulation(seed, lattice);
-
   const double T = 10000.0;
-  mc_simulation.add_mc_move("cluster_mc_spin_flip", T);
+  ising::monte_carlo mc_simulation(seed, lattice, T);
+
+  mc_simulation.add_mc_move("cluster_mc_spin_flip");
 
   mc_simulation.do_n_steps(1);
 
@@ -151,12 +151,11 @@ TEST(nodes, MonteCarloAddTwoMoves) {
             lattice->spin);
 
   int seed(19104);
-  ising::monte_carlo mc_simulation(seed, lattice);
-
   const double T = 10000.0;
+  ising::monte_carlo mc_simulation(seed, lattice, T);
 
-  mc_simulation.add_mc_move("cluster_mc_spin_flip", T);
-  mc_simulation.add_mc_move("particle_swap", T);
+  mc_simulation.add_mc_move("cluster_mc_spin_flip");
+  mc_simulation.add_mc_move("particle_swap");
 
   int n_avg = mc_simulation.do_n_steps(1);
 

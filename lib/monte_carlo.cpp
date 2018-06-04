@@ -117,7 +117,7 @@ void particle_swap::step(
 
 //----------------------------------------------------------------------------//
 
-void monte_carlo::add_mc_move(std::string &&mc_move_name, const double T) {
+void monte_carlo::add_mc_move(std::string &&mc_move_name) {
 
   if (mc_move_name == std::string("cluster_mc_spin_flip")) {
     std::unique_ptr<mc_move> act = std::make_unique<cluster_mc_spin_flip>(T);
