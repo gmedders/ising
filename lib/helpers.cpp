@@ -117,13 +117,12 @@ int generated_desired_occupancy(ising::nodes &lattice, int &ndesiredOccupied) {
 
   while (noccupied > ndesiredOccupied && !indices.empty()) {
 
-    int delete_this_site = indices.back();;
+    int delete_this_site = indices.back();
     indices.pop_back();
     if (not lattice.frozen[delete_this_site]) {
       lattice.spin[delete_this_site] = 0;
       noccupied = lattice.calculate_noccupied();
     }
-
   }
 
   return noccupied;
