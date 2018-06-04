@@ -158,7 +158,7 @@ TEST(nodes, MonteCarloAddTwoMoves) {
   mc_simulation.add_mc_move("cluster_mc_spin_flip", T);
   mc_simulation.add_mc_move("particle_swap", T);
 
-  mc_simulation.do_n_steps(1);
+  int n_avg = mc_simulation.do_n_steps(1);
 
   // I've stored the state of the spins after a single pass through
   // cluster_mc_spin_flip.
@@ -168,4 +168,15 @@ TEST(nodes, MonteCarloAddTwoMoves) {
   for (int i = 0; i < lattice->nsites; ++i) {
     EXPECT_EQ(final_spin.at(i), lattice->spin[i]);
   }
+  EXPECT_EQ(n_avg, 1);
+  EXPECT_EQ(mc_simulation.M_av, 4);
+  EXPECT_EQ(mc_simulation.numNeighbor_av, 48);
+  EXPECT_EQ(mc_simulation.numVertNeighbor_av, 16);
+
+  n_avg = mc_simulation.do_n_steps(1);
+
+  EXPECT_EQ(n_avg, 1);
+  EXPECT_EQ(mc_simulation.M_av, 0);
+  EXPECT_EQ(mc_simulation.numNeighbor_av, 48);
+  EXPECT_EQ(mc_simulation.numVertNeighbor_av, 16);
 }
