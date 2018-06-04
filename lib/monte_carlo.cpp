@@ -156,8 +156,8 @@ int monte_carlo::do_n_steps(int nsteps) {
     };
 
     // FIXME
-    // ising::collect_stats(lattice, n_av, M_av, numNeighbor_av,
-    //                      numVertNeighbor_av);
+    ising::collect_stats(*lattice, n_av, M_av, numNeighbor_av,
+                         numVertNeighbor_av);
   }
 
   return n_av;
