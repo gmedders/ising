@@ -46,6 +46,11 @@ struct particle_swap : public mc_move {
 
 struct monte_carlo {
 
+  monte_carlo(int seed, std::shared_ptr<ising::nodes> the_lattice) {
+    generator = std::default_random_engine(seed);
+    lattice = the_lattice;
+  };
+
   double M_av;
   double numNeighbor_av;
   double numVertNeighbor_av;
@@ -55,7 +60,7 @@ struct monte_carlo {
 
   std::vector<std::unique_ptr<mc_move>> mc_moves;
 
-  void add_mc_move(std::string &, const double);
+  void add_mc_move(std::string &&, const double);
   int do_n_steps(int);
 };
 

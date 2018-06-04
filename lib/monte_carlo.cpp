@@ -117,7 +117,7 @@ void particle_swap::step(
 
 //----------------------------------------------------------------------------//
 
-void monte_carlo::add_mc_move(std::string &mc_move_name, const double T) {
+void monte_carlo::add_mc_move(std::string &&mc_move_name, const double T) {
 
   if (mc_move_name == std::string("cluster_mc_spin_flip")) {
     std::unique_ptr<mc_move> act = std::make_unique<cluster_mc_spin_flip>(T);
@@ -151,11 +151,9 @@ int monte_carlo::do_n_steps(int nsteps) {
   // Perform the requested number of steps
   for (int istep = 0; istep < nsteps; ++istep) {
 
-    for (auto &this_mc_move : mc_moves) {
+    for (auto &this_mc_move : mc_moves)
       this_mc_move->step(lattice, generator, rand_lattice_site);
-    };
 
-    // FIXME
     ising::collect_stats(*lattice, n_av, M_av, numNeighbor_av,
                          numVertNeighbor_av);
   }

@@ -35,6 +35,35 @@ TEST(nodes, ParticleSwap) {
   EXPECT_EQ(initial_spin.at(1), lattice->spin[7]);
 }
 
+// Same test as ParticleSwap, but mediated through monte_carlo class
+TEST(nodes, MonteCarloAddParticleSwapMove) {
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  auto lattice = std::make_shared<ising::nodes>();
+  int nx = 2, ny = 2, nz = 2;
+  lattice->init(nx, ny, nz);
+  // initial_spin
+  // level 0:
+  // -1  1
+  // -1 -1
+  // level 1:
+  //  1   1
+  //  1  -1
+  std::vector<int> initial_spin = {-1, 1, -1, -1, 1, 1, 1, -1};
+  std::copy(&initial_spin[0], &initial_spin[0] + lattice->nsites,
+            lattice->spin);
+
+  int seed(19104);
+  ising::monte_carlo mc_simulation(seed, lattice);
+
+  const double T = 10000.0;
+  mc_simulation.add_mc_move("particle_swap", T);
+
+  mc_simulation.do_n_steps(1);
+
+  // Particles 1 and 7 should have swapped. Verify this
+  EXPECT_EQ(initial_spin.at(1), lattice->spin[7]);
+}
+
 TEST(nodes, ClusterSpinFlip) {
   // nx = 2, ny = 2, nz = 2, kInteraction = 0
   auto lattice = std::make_shared<ising::nodes>();
@@ -63,6 +92,77 @@ TEST(nodes, ClusterSpinFlip) {
   // I've stored the state of the spins after a single pass through
   // cluster_mc_spin_flip.
   std::vector<int> final_spin = {-1, -1, -1, 1, -1, -1, -1, 1};
+
+  // Assert that the lattice reflects these final_spins
+  for (int i = 0; i < lattice->nsites; ++i) {
+    EXPECT_EQ(final_spin.at(i), lattice->spin[i]);
+  }
+}
+
+// Same test as ClusterSpinFlip, but mediated through monte_carlo class
+TEST(nodes, MonteCarloAddSpinFlipMove) {
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  auto lattice = std::make_shared<ising::nodes>();
+  int nx = 2, ny = 2, nz = 2;
+  lattice->init(nx, ny, nz);
+  // initial_spin
+  // level 0:
+  // -1  1
+  // -1 -1
+  // level 1:
+  //  1   1
+  //  1  -1
+  std::vector<int> initial_spin = {-1, 1, -1, -1, 1, 1, 1, -1};
+  std::copy(&initial_spin[0], &initial_spin[0] + lattice->nsites,
+            lattice->spin);
+
+  int seed(19104);
+  ising::monte_carlo mc_simulation(seed, lattice);
+
+  const double T = 10000.0;
+  mc_simulation.add_mc_move("cluster_mc_spin_flip", T);
+
+  mc_simulation.do_n_steps(1);
+
+  // I've stored the state of the spins after a single pass through
+  // cluster_mc_spin_flip.
+  std::vector<int> final_spin = {-1, -1, -1, 1, -1, -1, -1, 1};
+
+  // Assert that the lattice reflects these final_spins
+  for (int i = 0; i < lattice->nsites; ++i) {
+    EXPECT_EQ(final_spin.at(i), lattice->spin[i]);
+  }
+}
+
+TEST(nodes, MonteCarloAddTwoMoves) {
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  auto lattice = std::make_shared<ising::nodes>();
+  int nx = 2, ny = 2, nz = 2;
+  lattice->init(nx, ny, nz);
+  // initial_spin
+  // level 0:
+  // -1  1
+  // -1 -1
+  // level 1:
+  //  1   1
+  //  1  -1
+  std::vector<int> initial_spin = {-1, 1, -1, -1, 1, 1, 1, -1};
+  std::copy(&initial_spin[0], &initial_spin[0] + lattice->nsites,
+            lattice->spin);
+
+  int seed(19104);
+  ising::monte_carlo mc_simulation(seed, lattice);
+
+  const double T = 10000.0;
+
+  mc_simulation.add_mc_move("cluster_mc_spin_flip", T);
+  mc_simulation.add_mc_move("particle_swap", T);
+
+  mc_simulation.do_n_steps(1);
+
+  // I've stored the state of the spins after a single pass through
+  // cluster_mc_spin_flip.
+  std::vector<int> final_spin = {-1, -1, -1, -1, -1, -1, 1, 1};
 
   // Assert that the lattice reflects these final_spins
   for (int i = 0; i < lattice->nsites; ++i) {
