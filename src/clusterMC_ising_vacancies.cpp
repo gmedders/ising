@@ -242,8 +242,7 @@ int main(int argc, char **argv) {
 #endif
 
   lattice.generate_random_spins(generator);
-  const int noccupied =
-      ising::generated_desired_occupancy(lattice, ndesiredOccupied);
+  const int noccupied = lattice.generate_desired_occupancy(ndesiredOccupied);
 
 #ifdef VERBOSE
 #ifdef ENABLE_MPI

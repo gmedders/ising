@@ -1,6 +1,7 @@
 #ifndef NODES_H
 #define NODES_H
 
+#include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -25,10 +26,12 @@ struct nodes {
   void attempt_to_add(std::vector<int> &, std::vector<bool> &, int, int, int,
                       bool);
 
-  void generate_random_spins(std::default_random_engine& generator);
+  void generate_random_spins(std::default_random_engine &generator);
 
   double calcE_for_one_site(int &);
   double calcE_for_two_sites(int &, int &);
+
+  int generate_desired_occupancy(int &);
 
   int nx;
   int ny;

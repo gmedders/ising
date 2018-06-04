@@ -70,12 +70,38 @@ void nodes::generate_random_spins(std::default_random_engine &generator) {
   }
 }
 
+//----------------------------------------------------------------------------//
 
 int nodes::calculate_noccupied() {
   int noccupied = 0;
   for (int i = 0; i < nsites; ++i)
     if (spin[i] != 0)
       ++noccupied;
+  return noccupied;
+}
+
+//----------------------------------------------------------------------------//
+
+int nodes::generate_desired_occupancy(int &ndesiredOccupied) {
+
+  int noccupied = calculate_noccupied();
+  if (noccupied <= (ndesiredOccupied))
+    return noccupied;
+
+  std::vector<std::vector<int>::size_type> indices;
+  for (int i = 0; i < nsites; ++i)
+    indices.push_back(i);
+  std::random_shuffle(indices.begin(), indices.end());
+
+  while (noccupied > ndesiredOccupied && !indices.empty()) {
+    int delete_this_site = indices.back();
+    indices.pop_back();
+    if (not frozen[delete_this_site]) {
+      spin[delete_this_site] = 0;
+      noccupied = calculate_noccupied();
+    }
+  }
+
   return noccupied;
 }
 

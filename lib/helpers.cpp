@@ -104,30 +104,4 @@ void collect_stats(ising::nodes &lattice, int &n_av, double &M_av,
 
 //----------------------------------------------------------------------------//
 
-int generated_desired_occupancy(ising::nodes &lattice, int &ndesiredOccupied) {
-
-  int noccupied = lattice.calculate_noccupied();
-  if (noccupied <= (ndesiredOccupied))
-    return noccupied;
-
-  std::vector<std::vector<int>::size_type> indices;
-  for (int i = 0; i < lattice.nsites; ++i)
-    indices.push_back(i);
-  std::random_shuffle(indices.begin(), indices.end());
-
-  while (noccupied > ndesiredOccupied && !indices.empty()) {
-
-    int delete_this_site = indices.back();
-    indices.pop_back();
-    if (not lattice.frozen[delete_this_site]) {
-      lattice.spin[delete_this_site] = 0;
-      noccupied = lattice.calculate_noccupied();
-    }
-  }
-
-  return noccupied;
-}
-
-//----------------------------------------------------------------------------//
-
 } // namespace ising

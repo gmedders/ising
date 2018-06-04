@@ -48,7 +48,7 @@ int do_ising(ising::nodes &lattice, const double T,
   std::uniform_real_distribution<double> rand_01(0.0, 1.0);
 
   // Randomly zero out the spins for half the sites
-  int noccupied = ising::generated_desired_occupancy(lattice, ndesiredOccupied);
+  int noccupied = lattice.generate_desired_occupancy(ndesiredOccupied);
 
 #ifdef VERBOSE
 #ifdef ENABLE_MPI
@@ -292,8 +292,7 @@ int main(int argc, char **argv) {
     MPI_Reduce(&my_M_av, &M_av, 1, MPI_DOUBLE_PRECISION, MPI_SUM, 0,
                MPI_COMM_WORLD);
     MPI_Reduce(&my_numNe ighbor_av, &numNeighbor_av, 1, MPI_DOUBLE_PRECISION,
-               MPI_SUM, 0, MPI_COMM_WOR
-LD);
+               MPI_SUM, 0, MPI_COMM_WOR LD);
     MPI_Reduce(&my_numVertNeighbor_av, &numVertNeighbor_av, 1,
                MPI_DOUBLE_PRECISION, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Reduce(&my_n_av, &n_av, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
