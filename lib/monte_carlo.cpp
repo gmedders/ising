@@ -81,23 +81,25 @@ void local_mc_spin_flip::step(
     std::default_random_engine &generator,
     std::uniform_int_distribution<int> &rand_lattice_site) {
 
-  int active_site = rand_lattice_site(generator);
+  for (int n = 0; n < lattice->nsites; ++n) {
+    int active_site = rand_lattice_site(generator);
 
-  // Calculate energy before the spin flip
-  double E0 = lattice->calcE_for_one_site(active_site);
+    // Calculate energy before the spin flip
+    double E0 = lattice->calcE_for_one_site(active_site);
 
-  // Create trial move by swapping the spins. Recalc Energy
-  lattice->spin[active_site] *= -1;
-  double E1 = lattice->calcE_for_one_site(active_site);
-
-  const double dE = E1 - E0;
-
-  // Monte-Carlo acceptance criteria
-  double p = std::exp(-beta * dE);
-  double r = rand_01(generator);
-  // Test if the move was REJECTED. If so, re-flip spin to undo move
-  if (r > p) {
+    // Create trial move by swapping the spins. Recalc Energy
     lattice->spin[active_site] *= -1;
+    double E1 = lattice->calcE_for_one_site(active_site);
+
+    const double dE = E1 - E0;
+
+    // Monte-Carlo acceptance criteria
+    double p = std::exp(-beta * dE);
+    double r = rand_01(generator);
+    // Test if the move was REJECTED. If so, re-flip spin to undo move
+    if (r > p) {
+      lattice->spin[active_site] *= -1;
+    }
   }
 }
 
