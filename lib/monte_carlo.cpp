@@ -76,6 +76,33 @@ void cluster_mc_spin_flip::step(
 
 //----------------------------------------------------------------------------//
 
+void local_mc_spin_flip::step(
+    std::shared_ptr<ising::nodes> lattice,
+    std::default_random_engine &generator,
+    std::uniform_int_distribution<int> &rand_lattice_site) {
+
+  int active_site = rand_lattice_site(generator);
+
+  // Calculate energy before the spin flip
+  double E0 = lattice->calcE_for_one_site(active_site);
+
+  // Create trial move by swapping the spins. Recalc Energy
+  lattice->spin[active_site] *= -1;
+  double E1 = lattice->calcE_for_one_site(active_site);
+
+  const double dE = E1 - E0;
+
+  // Monte-Carlo acceptance criteria
+  double p = std::exp(-beta * dE);
+  double r = rand_01(generator);
+  // Test if the move was REJECTED. If so, re-flip spin to undo move
+  if (r > p) {
+    lattice->spin[active_site] *= -1;
+  }
+}
+
+//----------------------------------------------------------------------------//
+
 void particle_swap::step(
     std::shared_ptr<ising::nodes> lattice,
     std::default_random_engine &generator,
@@ -121,6 +148,10 @@ void monte_carlo::add_mc_move(std::string &&mc_move_name) {
 
   if (mc_move_name == std::string("cluster_mc_spin_flip")) {
     std::unique_ptr<mc_move> act = std::make_unique<cluster_mc_spin_flip>(T);
+    mc_moves.push_back(std::move(act));
+
+  } else if (mc_move_name == std::string("local_mc_spin_flip")) {
+    std::unique_ptr<mc_move> act = std::make_unique<local_mc_spin_flip>(T);
     mc_moves.push_back(std::move(act));
 
   } else if (mc_move_name == std::string("particle_swap")) {
