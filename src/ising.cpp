@@ -15,6 +15,8 @@
 #include <algorithm>
 #include <random>
 
+#include "tclap/CmdLine.h"
+
 #include "helpers.h"
 #include "monte_carlo.h"
 #include "nodes.h"
@@ -26,7 +28,6 @@
 
 namespace {
 
-size_t nsteps(40000);
 int my_rank(0), my_size(1);
 
 } // namespace
@@ -34,23 +35,49 @@ int my_rank(0), my_size(1);
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char **argv) {
-  if (argc != 6) {
-    std::cerr << "usage: clusterMC_ising_vacancies "
-              << "nx ny nz kInteraction occupancy_ratio > a.dat" << std::endl;
-    return EXIT_FAILURE;
-  }
+  // if (argc != 6) {
+  //   std::cerr << "usage: clusterMC_ising_vacancies "
+  //             << "nx ny nz k_interaction occupancy_ratio > a.dat" <<
+  //             std::endl;
+  //   return EXIT_FAILURE;
+  // }
 
   // Define lattice size and initialize it
-  int nx(0), ny(0), nz(0);
-  double kInteraction(0.0), occupancy(-1.0);
+  int nx, ny, nz, nsteps;
+  double k_interaction, occupancy;
+  bool localMC;
   try {
-    nx = ising::read_command_line_int(argv[1]);
-    ny = ising::read_command_line_int(argv[2]);
-    nz = ising::read_command_line_int(argv[3]);
-    kInteraction = ising::read_command_line_double(argv[4]);
-    occupancy = ising::read_command_line_double(argv[5]);
+    TCLAP::CmdLine cmd("Command description message", ' ', "0.9");
+    TCLAP::ValueArg<int> x_arg("x", "nx", "Number of sites in x-dimension",
+                               true, 1, "ndim_x", cmd);
+    TCLAP::ValueArg<int> y_arg("y", "ny", "Number of sites in y-dimension",
+                               true, 1, "ndim_y", cmd);
+    TCLAP::ValueArg<int> z_arg("z", "nz", "Number of sites in z-dimension",
+                               false, 1, "ndim_z", cmd);
+    TCLAP::ValueArg<int> n_arg("n", "nsteps", "Number of MC simulation steps",
+                               true, 0, "nsteps", cmd);
+    TCLAP::ValueArg<double> k_arg("k", "k_interaction",
+                                  "Parameter that controls the surface "
+                                  "tension. Only useful with vacancies.",
+                                  false, 0.0, "Surface tension", cmd);
+    TCLAP::ValueArg<double> o_arg("o", "occupancy",
+                                  "Fractional occupancy of the lattice", false,
+                                  -1, "occupancy", cmd);
+    TCLAP::SwitchArg l_arg(
+        "l", "localMC",
+        "Do brute-force local Monte-Carlo for individual spins.", cmd, false);
+    cmd.parse(argc, argv);
+    nx = x_arg.getValue();
+    ny = y_arg.getValue();
+    nz = z_arg.getValue();
+    nsteps = n_arg.getValue();
+    k_interaction = k_arg.getValue();
+    occupancy = o_arg.getValue();
+    localMC = l_arg.getValue();
+
     if (occupancy > 1.0)
       throw std::invalid_argument("Occupancy ratio must be <= 1.0");
+
   } catch (const std::exception &e) {
     std::cerr << e.what() << std::endl;
     return EXIT_FAILURE;
@@ -66,7 +93,7 @@ int main(int argc, char **argv) {
 #endif
 
   auto lattice = std::make_shared<ising::nodes>();
-  lattice->init(nx, ny, nz, kInteraction);
+  lattice->init(nx, ny, nz, k_interaction);
 
   // Determine how many sites are to be occupied
   // If passed a negative number, make a fully occupied lattice
@@ -108,8 +135,13 @@ int main(int argc, char **argv) {
     seed += 11 * my_rank;
     ising::monte_carlo mc_simulation(seed, lattice, T);
 
-    mc_simulation.add_mc_move("particle_swap");
-    mc_simulation.add_mc_move("cluster_mc_spin_flip");
+    if (occupancy >= 0.0)
+      mc_simulation.add_mc_move("particle_swap");
+
+    if (localMC)
+      mc_simulation.add_mc_move("local_mc_spin_flip");
+    else
+      mc_simulation.add_mc_move("cluster_mc_spin_flip");
 
     int my_n_av = mc_simulation.do_n_steps(nsteps);
 
