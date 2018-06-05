@@ -152,31 +152,3 @@ TEST(helpers, collectStatsVacancy3D) {
   EXPECT_DOUBLE_EQ(M_av, 2.0);
   EXPECT_DOUBLE_EQ(numVertNeighbor_av, 12.0);
 }
-
-TEST(helpers, GenerateDesiredOccupancy) {
-  // initial_spin
-  // level 0:
-  //  1  0
-  // -1 -1
-  // level 1:
-  //  1  0
-  //  1  1
-  std::vector<int> initial_spin = {1, 0, -1, -1, 1, 0, 1, 1};
-
-  // nx = 2, ny = 2, nz = 2, kInteraction = 0
-  ising::nodes lattice;
-  lattice.init(2, 2, 2, 0.0);
-  ASSERT_EQ(int(initial_spin.size()), int(lattice.nsites));
-
-  std::copy(&initial_spin[0], &initial_spin[0] + lattice.nsites, lattice.spin);
-
-  // Set up random numbers
-  std::default_random_engine generator(19103);
-  std::uniform_int_distribution<int> rand_lattice_site(0, lattice.nsites - 1);
-
-  int ndesiredOccupied(4);
-  int noccupied = ising::generated_desired_occupancy(
-      lattice, generator, rand_lattice_site, ndesiredOccupied);
-
-  EXPECT_EQ(noccupied, ndesiredOccupied);
-}

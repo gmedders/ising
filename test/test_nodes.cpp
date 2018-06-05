@@ -44,18 +44,17 @@ TEST(nodes, ConnectivityPBC) {
   EXPECT_EQ(int(lattice.neighbors.size()), int(lattice.nsites));
   EXPECT_EQ(int(lattice.neighborVertical.size()), int(lattice.nsites));
 
-  for (auto& neighbor: lattice.neighbors)
+  for (auto &neighbor : lattice.neighbors)
     EXPECT_EQ(int(neighbor.size()), 6);
 
-  for (auto neighborVertical: lattice.neighborVertical){
+  for (auto neighborVertical : lattice.neighborVertical) {
     int n_vert(0);
-    for (auto isVerticalNeighbor: neighborVertical) {
+    for (auto isVerticalNeighbor : neighborVertical) {
       if (isVerticalNeighbor)
         ++n_vert;
     }
     EXPECT_EQ(n_vert, 2);
   }
-
 }
 
 TEST(nodes, EnergyForOneSite) {
@@ -131,4 +130,27 @@ TEST(nodes, EnergyChangeOnMove) {
   ising::swap_spins(lattice.spin, orig_site, dest_site);
   double E1 = lattice.calcE_for_two_sites(orig_site, dest_site);
   EXPECT_DOUBLE_EQ(E1, 2.0);
+}
+
+TEST(helpers, GenerateDesiredOccupancy) {
+  // initial_spin
+  // level 0:
+  //  1  0
+  // -1 -1
+  // level 1:
+  //  1  0
+  //  1  1
+  std::vector<int> initial_spin = {1, 0, -1, -1, 1, 0, 1, 1};
+
+  // nx = 2, ny = 2, nz = 2, kInteraction = 0
+  ising::nodes lattice;
+  lattice.init(2, 2, 2, 0.0);
+  ASSERT_EQ(int(initial_spin.size()), int(lattice.nsites));
+
+  std::copy(&initial_spin[0], &initial_spin[0] + lattice.nsites, lattice.spin);
+
+  int ndesiredOccupied(4);
+  int noccupied = lattice.generate_desired_occupancy(ndesiredOccupied);
+
+  EXPECT_EQ(noccupied, ndesiredOccupied);
 }

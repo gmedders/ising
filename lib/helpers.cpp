@@ -1,6 +1,7 @@
 #include "helpers.h"
 
 #include <sstream>
+#include <vector>
 
 namespace ising {
 
@@ -99,40 +100,6 @@ void collect_stats(ising::nodes &lattice, int &n_av, double &M_av,
 
   numNeighbor_av += ((double)numNeighbor);
   numVertNeighbor_av += ((double)numVertNeighbor);
-}
-
-//----------------------------------------------------------------------------//
-
-int generated_desired_occupancy(
-    ising::nodes &lattice, std::default_random_engine &generator,
-    std::uniform_int_distribution<int> &rand_lattice_site,
-    int &ndesiredOccupied) {
-  // Randomly zero out the spins for half the sites
-  int noccupied(0);
-  for (int i = 0; i < lattice.nsites; ++i)
-    if (lattice.spin[i] != 0)
-      ++noccupied;
-  if (noccupied > (ndesiredOccupied)) {
-    do {
-
-      int delete_this_site = rand_lattice_site(generator);
-      lattice.spin[delete_this_site] = 0;
-
-      noccupied = 0;
-      for (int i = 0; i < lattice.nsites; ++i)
-        if (lattice.spin[i] != 0)
-          ++noccupied;
-
-    } while (noccupied > (ndesiredOccupied));
-  }
-
-  if (noccupied != ndesiredOccupied) {
-    std::cerr << "Function to create vacancies not working as expected.\n"
-              << " expected " << ndesiredOccupied << " occupied sites but"
-              << " found " << noccupied << std::endl;
-    exit(1);
-  }
-  return noccupied;
 }
 
 //----------------------------------------------------------------------------//
