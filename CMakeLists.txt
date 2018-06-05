@@ -12,6 +12,8 @@ endif()
 #-------------------
 set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include)
 include_directories(${COMMON_INCLUDES})
+set(TCLAP_INCLUDES ${PROJECT_SOURCE_DIR}/include/tclap)
+include_directories(${TCLAP_INCLUDES})
 
 file(GLOB lib_sources ./lib/*.cpp)
 set( lib ${lib_sources})
