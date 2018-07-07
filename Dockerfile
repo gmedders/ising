@@ -19,15 +19,16 @@ RUN \
 RUN apt-get install git -y
 RUN apt-get install cmake -y
 
-# Define default command.
-CMD ["bash"]
-
 WORKDIR /app
 ADD . /app
 
 # Build the packaged
 RUN mkdir build && cd build && cmake .. && cmake --build .
 
-# When the image is run, perform the tests
+# When the image is run, go directly to the executables
 WORKDIR /app/build
-ENTRYPOINT ["ctest", "-VV"]
+#ENTRYPOINT ["ctest", "-VV"]
+
+# Define default command.
+CMD ["bash"]
+
