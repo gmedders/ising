@@ -6,5 +6,5 @@ services:
   - docker
 
 script:
-  - docker build -t gmedders/pimd .
+  - docker build -t gmedders/ising .
   - docker run -i -t gmedders/ising ctest -VV
